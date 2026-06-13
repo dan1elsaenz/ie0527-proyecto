@@ -1,2 +1,3 @@
-# latex-template-repo
-Template repo for LaTeX
+# ie0527-proyecto
+
+Repositorio para el proyecto del curso IE0527: Ingeniería de Comunicaciones
