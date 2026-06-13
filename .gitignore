@@ -1,0 +1,5 @@
+# out dir for LaTeX compilation
+out/
+
+# MacOS .DS_Store
+.DS_Store
