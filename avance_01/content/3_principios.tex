@@ -1,0 +1,127 @@
+% 3_principios.tex
+
+% Investigue sobre los principios de digitalización de audio, incluyendo frecuencia de muestreo, cuantización, formatos digitales de audio y limitaciones de ancho de banda para transmisión inalámbrica. Redacte lo más importante encontrado luego de esta investigación.
+\section{Principios de digitalización de audio para transmisión inalámbrica}
+
+La transmisión inalámbrica de audio requiere comprender los principios fundamentales de la digitalización de señales, puesto que cada etapa del proceso impone restricciones sobre la calidad, el volumen de datos y la viabilidad de la transmisión.
+En esta sección se cubren los conceptos teóricos de muestreo, cuantización, formatos digitales y limitaciones de ancho de banda, que corresponden a la base teórica sobre la que se desarrolla el proyecto en cuestión.
+La cadena completa del sistema abarca desde la captura analógica por micrófono hasta la reproducción en el receptor; se pasa por la conversión analógico-digital, el almacenamiento temporal, la transmisión inalámbrica y la conversión digital-analógica.
+
+\subsection{Canales de audio}
+
+Una señal de audio digital puede estar compuesta por uno o más canales, donde cada canal representa una fuente de audio independiente que requiere su propia secuencia de muestras.
+Por un lado, el caso más común es el audio estéreo, que utiliza dos canales para reproducir información espacial mediante la diferenciación entre el oído izquierdo y el derecho (especialmente útil para audífonos).
+Por otro lado, el audio mono utiliza un único canal, lo que reduce a la mitad el volumen de datos respecto al estéreo para una misma frecuencia de muestreo y resolución en bits \cite{li2014}.
+
+Entonces, la fórmula para calcular la tasa de bits de una señal de audio digitalizada es:
+\begin{equation}
+    R_{b} = f_s \cdot n \cdot C,
+\end{equation}
+donde $f_s$ es la frecuencia de muestreo, $n$ es la resolución en bits y $C$ es el número de canales.
+
+Para la transmisión de voz en el contexto del proyecto, un único canal es suficiente, puesto que la inteligibilidad del mensaje depende únicamente del contenido espectral de la señal.
+
+\subsection{Frecuencia de muestreo}
+
+La digitalización de una señal de audio parte del proceso de muestreo, por el cual se obtienen muestras discretas de una señal analógica continua a intervalos regulares de tiempo, determinados a partir de la frecuencia de muestreo $f_{s}$ (en \si{\hertz}).
+El fundamento teórico de este proceso es el \textit{Sampling Theorem}, formulado por Nyquist y Shannon, el cual establece que para reconstruir una señal analógica sin pérdida de información, $f_s$ debe ser al menos el doble de la frecuencia máxima presente en la señal.
+Matemáticamente, se interpreta de la siguiente forma \cite{pohlmann2005, haykin2007}:
+\begin{equation}
+    f_s \geq 2 f_{\max}.
+\end{equation}
+
+Cuando esta condición no se satisface, las componentes de frecuencia superiores a $f_s/2$ se superponen con las de menor frecuencia.
+Este fenómeno se conoce como \textit{aliasing} y produce distorsión irreversible en la señal reconstruida.
+Para evitar este efecto, se incorpora un filtro pasobajo en la entrada del convertidor analógico-digital (filtro \textit{anti-aliasing}), cuya función es atenuar las componentes espectrales por encima de $f_s/2$ previo al muestreo \cite{haykin2007}.
+
+En el contexto de la voz humana para el proyecto, el rango de frecuencias de interés se extiende aproximadamente entre \SI{300}{\hertz} y \SI{3400}{\hertz} \cite{tanenbaum2011}.
+Por el criterio de Nyquist, una frecuencia de muestreo de \SI{8000}{\hertz} es suficiente para capturar este rango y es utilizado en algunos estándares de telefonía digital \cite{haykin2007, li2014}.
+Para aplicaciones de mayor fidelidad, se utilizan frecuencias de \SI{16}{\kilo\hertz} por ejemplo, pero la desventaja es que esto incrementa proporcionalmente el volumen de datos y la tasa de bits requerida para su transmisión.
+
+\subsection{Cuantización}
+
+El siguiente paso corresponde al proceso de cuantización.
+Este consiste en asignar un valor digital discreto a cada muestra obtenida durante el muestreo, a partir de un conjunto finito de niveles.
+Con $n$ bits se dispone de $2^n$ niveles de cuantización posibles; de forma que a mayor resolución, más fino es el nivel de detalle con el que se representa la amplitud de la señal \cite{pohlmann2005, haykin2007}.
+
+Al aumentar la resolución mejora la calidad de la señal, pero también incrementa linealmente la cantidad de datos que deben almacenarse y transmitirse.
+La diferencia entre el valor analógico real de una muestra y su representación digital más cercana se denomina error de cuantización.
+Este error disminuye conforme aumenta la resolución en bits, debido a que el intervalo $\Delta$ entre niveles se reduce proporcionalmente.
+Para mitigar el efecto perceptible de este error, se emplea el \textit{dither}, que es una técnica que añade una señal de ruido de baja amplitud a la señal analógica previo a la cuantización, con el efecto de linealizar estadísticamente el error (a costa de un incremento controlado del ruido) \cite{pohlmann2005}.
+
+\subsection{Formatos digitales de audio}
+
+Una vez digitalizada la señal de audio, las muestras obtenidas deben almacenarse en un formato que permita su transmisión y reconstrucción después.
+Los formatos digitales de audio presentan diferentes estructuras de datos, la presencia o ausencia de metadatos y el esquema de codificación que emplean.
+
+Por mencionar algunos conocidos, el formato más básico es el PCM crudo (\textit{raw}), en el cual las muestras se almacenan de forma secuencial sin ningún \textit{header} ni metadato.
+Por lo que, es ideal para etapas de transmisión donde se busca minimizar el \textit{overhead}.
+El formato WAV expande un poco el PCM crudo mediante un encabezado de $44$ bytes que describe parámetros como la frecuencia de muestreo, la resolución en bits y el número de canales, lo que permite que cualquier sistema receptor interprete y reproduzca el archivo sin necesidad de conocer sus parámetros de antemano \cite{tanenbaum2011}.
+
+Luego, para reducir el volumen de datos, se pueden emplear esquemas de codificación más eficientes sobre el PCM base.
+La \textit{Pulse Code Modulation} (PCM) lineal es el esquema más directo, donde cada muestra se representa con su valor binario y los niveles de cuantización se distribuyen de forma uniforme en todo el rango.
+Los esquemas $\mu$-law y A-law aplican una función logarítmica sobre la amplitud de la señal, de manera que los niveles de representación se concentran en amplitudes bajas, donde suele encontrarse una parte significativa de la información de la voz; igual aplican la función inversa en la etapa de reconstrucción para aproximar la señal original \cite{pohlmann2005, li2014, tanenbaum2011}.
+Este esquema constituye el fundamento del estándar G.711.
+
+La \textit{Adaptive Differential Pulse Code Modulation} (ADPCM) codifica la diferencia entre muestras consecutivas en lugar de su valor y adapta el paso de cuantización (se modifica dinámicamente el cuantizador) a partir de un predictor, lo que permite alcanzar tasas de \SI{32}{\kilo bps} con calidad aceptable de voz \cite{pohlmann2005, li2014}.
+Como nota adicional, los códecs de compresión con pérdida, como Opus y MP3, se aprovechan de las limitaciones del sistema auditivo humano para descartar componentes espectrales que no son percibidas, lo cual reduce la tasa de datos requerida para inteligibilidad aceptable.
+
+Entonces, el tamaño de un archivo de audio sin comprimir queda determinado por la expresión:
+\begin{equation}
+    S = f_s \cdot b \cdot C \cdot t,
+\end{equation}
+donde $f_s$ es la frecuencia de muestreo (en \si{\hertz}), $b$ la resolución en bits por muestra, $C$ el número de canales y $t$ la duración en segundos.
+El Cuadro \ref{tab:esquemas} resume los principales esquemas evaluados para un mensaje de \SI{15}{\second} de voz mono a \SI{8}{\kilo\hertz} e incluye el número de paquetes de $32$ bytes resultante, relevante para la tasa de transmisión disponible en el módulo RF del laboratorio (se explica después).
+Para las etapas iniciales del proyecto se plantea el uso de PCM o WAV por su simplicidad de implementación, con la posibilidad de incorporar compresión en iteraciones posteriores.
+
+Por ejemplo, para audio mono a \SI{8}{\kilo\hertz} con $8$ bits por muestra, la tasa de bits resultante es de \SI{64}{kbps}, equivalente a \SI{8}{kB/s}.
+De esta forma, un mensaje de $5$ segundos ocupa \SI{40}{kB}, uno de $10$ segundos \SI{80}{kB} y uno de $15$ segundos \SI{120}{kB}, sin considerar metadatos posibles.
+El Cuadro \ref{tab:esquemas} resume los principales esquemas evaluados para un mensaje de \SI{15}{\second} de voz mono a \SI{8}{\kilo\hertz} e incluye el número de paquetes de $32$ bytes resultante, que es importante para la tasa de transmisión disponible en el módulo RF del laboratorio (esto se cubre posteriormente en detalle).
+
+\begin{table}[h]
+    \centering
+    \caption{Comparación de esquemas de codificación de audio para un mensaje de 15 segundos.}
+    \label{tab:esquemas}
+    \begin{tabular}{@{}rccc@{}}
+        \toprule
+        Esquema & Tasa de bits & Tamaño & Paquetes (32 B) \\
+        \midrule
+        PCM lineal 16 bit   & 128 kbps     & 240 kB      & 7500 \\
+        PCM lineal 8 bit    & 64 kbps      & 120 kB      & 3750 \\
+        $\mu$-law 8 bit     & 64 kbps      & 120 kB      & 3750 \\
+        ADPCM               & 32 kbps      & 60 kB       & 1875 \\
+        Opus                & $\sim$8 kbps & $\sim$15 kB & $\sim$469  \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Corrección de errores}
+
+En sistemas de transmisión de audio digital, la pérdida o corrupción de paquetes produce errores audibles en la señal reconstruida, debido a que las muestras faltantes o incorrectas se manifiestan como discontinuidades en la forma de onda.
+Para mitigar este efecto, se emplean mecanismos de detección y corrección de errores aplicados sobre los datos transmitidos.
+Como se vio durante el curso, la paridad simple agrega un bit adicional por bloque de datos que permite detectar errores de un solo bit, con un \textit{overhead} mínimo.
+El \textit{Cyclic Redundancy Check} (CRC) calcula un polinomio de verificación sobre el bloque de datos transmitido, de forma que el receptor puede determinar con alta confiabilidad si el contenido recibido es válido y es capaz de detectar errores en múltiples bits simultáneos \cite{pohlmann2005, tanenbaum2011}.
+Los códigos de Hamming introducen bits de paridad adicionales distribuidos en posiciones específicas del bloque, lo que permite no solo detectar sino también corregir errores de un bit sin necesidad de retransmisión, a costa de un mayor \textit{overhead} por bloque \cite{tarres_cabrera_codificacion, haykin2007}.
+En sistemas donde la retransmisión es viable, el esquema ARQ (\textit{Automatic Repeat reQuest}) establece un mecanismo por el cual el receptor notifica al transmisor los paquetes corruptos para que estos sean reenviados, lo que mejora la confiabilidad del enlace a expensas de latencia adicional \cite{tanenbaum2011, haykin2007}.
+Como alternativa a la retransmisión, la interpolación es una técnica de ocultamiento de errores que estima el valor de las muestras perdidas a partir de las muestras adyacentes, lo que permite mantener la continuidad perceptiva de la señal sin requerir un retorno \cite{tanenbaum2011}.
+
+\subsection{Limitaciones de ancho de banda para transmisión inalámbrica}
+
+El ancho de banda de un canal inalámbrico determina la cantidad máxima de información que puede ser transmitida por unidad de tiempo \cite{pohlmann2005}.
+En la práctica, la tasa de datos útil es siempre menor a la tasa teórica del canal, dado que una fracción del ancho de banda se destina a \textit{overhead} del protocolo de transmisión, \textit{headers} de paquetes y mecanismos de control.
+El límite teórico de la capacidad de un canal con ruido es una expresión que fue calculada por Shannon de la siguiente forma \cite{tanenbaum2011}:
+\begin{equation}
+    C_{\text{canal}} = B \log_2\left(1 + \text{SNR}\right),
+\end{equation}
+donde $C_{\text{canal}}$ es la capacidad máxima del canal en bits por segundo, $B$ es el ancho de banda en \si{\hertz} y SNR es la relación señal a ruido del canal.
+Este teorema establece que ningún esquema de codificación puede superar esta capacidad sin pasar en una tasa de error arbitrariamente alta.
+
+Un factor importante a analizar sobre la relación SNR es la distancia entre transmisor y receptor, pues la potencia de la señal recibida disminuye con la distancia según el modelo de propagación en espacio libre visto en el curso.
+A mayor distancia, menor es el SNR disponible; por ende, menor es la capacidad máxima del canal, lo cual implica un límite sobre la tasa de bits en función del alcance requerido por el sistema.
+
+En módulos RF de bajo nivel, la fragmentación del audio en paquetes de tamaño definido genera \textit{overhead} adicional por \textit{headers} de protocolo en cada paquete, lo que reduce la tasa útil efectiva respecto a la tasa del canal.
+Dentro del equipo disponible para la realización del proyecto, se incluyen \textit{transceivers} NRF24L que emplean este principio.
+
+Asimismo, la banda ISM de \SI{2.4}{\giga\hertz} dentro de lo que opera el módulo anterior, es compartida con tecnologías como WiFi y Bluetooth, lo que introduce interferencia que incrementa la tasa de error de paquetes y puede obligar a retransmisiones que consumen tiempo adicional.
+Adicionalmente, al operar a tasas de datos menores incrementa la sensibilidad del receptor y mejora la confiabilidad del enlace a mayor distancia, pero pierde tiempo de transmisión por mensaje.
+Para concluir, la elección del esquema de codificación de audio afecta este balance, puesto que una menor tasa de bits reduce el número de paquetes, el \textit{overhead} acumulado y la exposición a errores del canal \cite{pohlmann2005}.

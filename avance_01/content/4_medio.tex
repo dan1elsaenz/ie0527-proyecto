@@ -1,0 +1,107 @@
+% 4_medio.tex
+
+% Investigue sobre el funcionamiento del medio inalámbrico seleccionado y sus limitaciones para transmisión de información digital.
+
+\section{Funcionamiento y limitaciones del medio}
+
+En el espacio libre, los campos eléctricos y magnéticos no los encierra ninguna estructura de confinamiento, por lo que pueden tener cualquier magnitud y dirección, las cuales se determinan por el dispositivo que las genere, por ejemplo, una antena \cite{Hyatt}.
+El medio inalámbrico seleccionado para transmitir la información digital es la radiofrecuencia, la cual consiste en la propagación de ondas por medio del espacio libre \cite{Hyatt}, donde las ondas transportan la información de los archivos de audio.
+Estas son emitidas y captadas por las antenas incorporadas en el emisor y el receptor.
+La función que cumplen las antenas es irradiar potencia en todas direcciones; a estas se les conoce como antenas isotrópicas, de forma que la señal sea captada por una antena receptora.
+Las ondas viajan a la velocidad de la luz, donde su potencia depende de la potencia de transmisión, y al existir pérdidas el receptor recibe las ondas electromagnéticas con una potencia menor.
+
+\subsection{Limitaciones y consideraciones del medio de transmisión}
+
+Dado que la comunicación se da en un medio no guiado, la información digital está expuesta a sufrir los fenómenos típicos del aire: atenuación, obstáculos que bloquean la señal, ruido electromagnético, reflexión de la onda sobre otros objetos y dispersión \cite{wireless}.
+A continuación, se explican algunos de ellos.
+
+En primer lugar, la atenuación de la señal describe cómo disminuye la potencia recibida con la distancia entre el transmisor y el receptor.
+Se debe a la disipación de la potencia radiada por el transmisor, así como a los efectos del canal de propagación.
+
+En segundo lugar, una señal transmitida por medio de un canal inalámbrico suele experimentar variaciones aleatorias debido a la obstrucción causada por objetos en su trayectoria, lo que da lugar a variaciones aleatorias en la potencia recibida a una distancia determinada.
+Dichas variaciones también se deben a cambios en las superficies reflectantes y a la dispersión de la señal por objetos.
+El \textit{shadowing}, conocido como el efecto sombra, es la atenuación causada por obstáculos entre el transmisor y el receptor que absorben la señal transmitida.
+Cuando la atenuación es significativa, el objeto puede bloquear la señal directamente.
+Esta afectación en la señal no depende directamente de la distancia entre el transmisor y el receptor, sino de la cantidad y tamaño de los objetos que se encuentren en línea de vista.
+La variación debida a este efecto se produce a distancias proporcionales a la longitud del objeto que la obstruye (\SIrange{10}{100}{\meter} en exteriores, y menos en interiores) \cite{wireless}.
+
+Luego, se tienen la reflexión, la difracción y la dispersión.
+Estos fenómenos suceden cuando elementos del entorno interactúan con los elementos del transmisor o receptor.
+Los componentes de la señal que surgen debido a estos objetos se denominan componentes de trayectos múltiples.
+Los diferentes componentes de trayectos múltiples llegan al receptor con distintos retardos y desfases \cite{wireless}.
+
+Una vez conocido el funcionamiento del canal y los fenómenos que genera, se pueden enumerar las limitaciones que presenta el método de transmisión de la información digital: ancho de banda, capacidad del canal, potencia de transmisión, distancia emisor-receptor y ruido electromagnético.
+
+\subsection{Uso de bandas no licenciadas}
+
+Según \cite{SUTEL}, el espectro radioeléctrico es un bien natural de dominio público propio de la nación costarricense, por lo que no puede salir definitivamente del dominio del Estado.
+Por esta razón, se permite la comunicación por medio de radiofrecuencia únicamente en ciertas bandas no licenciadas, como la banda de \SI{2.4}{\giga\hertz} y la de \SI{900}{\mega\hertz}, entre otras.
+Se seleccionó la banda de \SI{2.4}{\giga\hertz} porque corresponde a la frecuencia de operación del \textit{transceiver} disponible en el laboratorio.
+Además, de acuerdo con el modelo de atenuación de Friis visto en el curso, la atenuación aumenta con la frecuencia de la banda de transmisión:
+\begin{equation}
+    L = \left(\frac{4 \pi d f}{c}\right)^2,
+\end{equation}
+lo cual implica que se tiene mayor atenuación respecto a otras opciones, pero está dentro de un rango aceptable para las distancias propuestas sobre las que se realiza la comunicación punto a punto.
+
+El \textit{transceiver} NRF24L01, disponible en el laboratorio, opera en la banda ISM de \SI{2.4}{\giga\hertz}, la cual es de uso libre y no requiere licencias para su utilización.
+Sin embargo, esta banda es compartida con tecnologías como WiFi y Bluetooth, por lo que pueden presentarse interferencias que afecten la calidad de la comunicación, provoquen pérdidas de paquetes y reduzcan el alcance efectivo del enlace inalámbrico.
+
+\subsection{Capacidades y limitaciones del transceiver NRF24L}
+
+El \textit{transceiver} NRF24L es adecuado para este proyecto por su capacidad de transmisión de datos, ancho de banda, potencia de transmisión, tamaño máximo de paquete y su capacidad de detección de errores.
+En esta subsección se describen sus características técnicas de funcionamiento, relacionadas con el medio sobre el que opera.
+
+El módulo cuenta con $3$ modos de operación: espera (\textit{standby}), transmisor y receptor.
+A continuación se explican brevemente:
+\begin{enumerate}
+    \item Modo espera: en este modo se minimiza la corriente promedio de consumo.
+    \item Modo receptor: en este modo el receptor demodula la señal en el canal de radiofrecuencia y presenta los datos demodulados al motor del protocolo de banda base, el cual busca constantemente un paquete válido.
+    \item Modo transmisor: al operar como transmisor, el módulo permanece en este estado hasta haber transmitido el último paquete.
+\end{enumerate}
+
+En cuanto al ancho de banda y tasa de datos, el módulo soporta tasas de \SI{1}{Mbps} o \SI{2}{Mbps}.
+Al utilizar \SI{1}{Mbps}, se alcanza una mejor sensibilidad en el receptor, de forma que se puede operar a mayor distancia.
+Al utilizar \SI{1}{Mbps} se hace uso de \SI{1}{MHz} de ancho de banda y al emplear \SI{2}{Mbps} se ocupa \SI{2}{MHz} \cite{nordic}.
+Con estos valores de ancho de banda, se debe tomar en cuenta la operación de dispositivos electrónicos con tecnologías activas en frecuencias similares, como Bluetooth o WiFi, pues pueden surgir interferencias durante las pruebas.
+
+El módulo permite programar distintas potencias de transmisión, resumidas en el Cuadro \ref{tab:potencias}.
+
+\begin{table}[H]
+\centering
+\caption{Potencia de salida RF y consumo de corriente DC durante la operación del \textit{transceiver} nRF24L \cite{nordic}.}
+\label{tab:potencias}
+\begin{tabular}{ccc}
+\toprule
+Configuración SPI & Potencia de salida & Consumo de corriente \\
+(\texttt{RF\_PWR}) & RF (\si{\dBm}) & DC (\si{\milli\ampere}) \\
+\midrule
+$11$ & $0$   & $11.3$ \\
+$10$ & $-6$  & $9.0$  \\
+$01$ & $-12$ & $7.5$  \\
+$00$ & $-18$ & $7.0$  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La potencia máxima de transmisión es de \SI{0}{\dBm}, lo que corresponde a \SI{1}{\milli\watt}.
+Al programar la potencia de transmisión para cada prueba, esta debe ser de una magnitud suficiente para que el audio se reproduzca de forma inteligible, lo que implica realizar un presupuesto de enlace que tome en cuenta las posibles pérdidas por atenuación y por los objetos entre los dispositivos.
+Para la prueba de \SI{30}{\meter} se espera atenuación en la señal recibida, así como pérdidas por los objetos que puedan encontrarse en la línea de vista.
+
+Finalmente, el formato de los paquetes del módulo consta de varios campos: preámbulo, dirección, control, \textit{payload} y CRC, como se resume en el Cuadro \ref{tab:shockburst}.
+El campo de \textit{payload} corresponde a la información efectiva de transmisión y tiene una extensión máxima de $32$ bytes, lo que determina la cantidad de paquetes necesarios para cada extensión de audio \cite{nordic}.
+
+\begin{table}[h]
+\centering
+\caption{Paquete de Enhanced Shockburst \cite{nordic}.}
+\label{tab:shockburst}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Preamble & Address & Packet Control Field & Payload & CRC \\
+\SI{1}{byte} & $3$--\SI{5}{byte} & \SI{9}{\bit} & $0$--\SI{32}{\byte} & $1$--\SI{2}{\byte} \\
+\hline
+\end{tabular}
+\end{table}
+
+El campo de CRC (\textit{Cyclic Redundancy Check}) corresponde al mecanismo de detección de errores, puede ser de $1$ o $2$ bytes y trabaja sobre la dirección, el campo de control y el \textit{payload}.
+Ningún paquete es aceptado si el CRC falla \cite{nordic}.
+

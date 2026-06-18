@@ -1,0 +1,16 @@
+% 5_conclusiones.tex
+
+\section{Conclusiones}
+
+Las principales conclusiones determinadas a partir de la presente investigación se enumeran a continuación:
+
+\begin{enumerate}
+    \item El sistema de transmisión inalámbrica de audio presenta desafíos tecnológicos dependientes entre sí, donde la fragmentación del audio en paquetes de tamaño restringido, la sincronización autónoma del receptor y el manejo del ruido en la banda de frecuencia seleccionada constituyen los problemas centrales de diseño, cuya solución debe satisfacer simultáneamente los requisitos de latencia máxima de 60 segundos, confiabilidad del enlace y autonomía energética.
+    
+    \item La elección de los parámetros de digitalización tiene un impacto directo sobre la viabilidad de la transmisión.
+    Por ejemplo, una configuración de audio mono a \SI{8}{\kilo\hertz} con $8$ bits por muestra produce una tasa de \SI{64}{kbps} y archivos de hasta \SI{120}{kB} para mensajes de $15$ segundos, lo que resulta en aproximadamente $3750$ paquetes de $32$ bytes.
+    Este valor puede reducirse significativamente mediante esquemas de compresión como ADPCM u Opus a cambio de mayor complejidad de implementación.
+    
+    \item La banda ISM de \SI{2.4}{\giga\hertz} es técnicamente viable para este sistema por su alta tasa de datos disponible, aunque impone limitaciones concretas por interferencia con tecnologías existentes, atenuación en función de la distancia y reducción de la tasa útil por \textit{overhead} de fragmentación.
+    Estos factores deben considerarse en el diseño del protocolo de transmisión desarrollado en el siguiente avance.
+\end{enumerate}
