@@ -1,0 +1,121 @@
+% preamble.tex
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
+
+\decimalpoint
+\usepackage{algorithmic}
+
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{subcaption}
+
+\usepackage{caption}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\usepackage[
+  backend=biber,
+  style=ieee,
+  sorting=none,
+  doi=true,
+  url=false,
+  isbn=false,
+  eprint=false
+]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{multirow}
+\usepackage{booktabs}
+
+\usepackage{graphicx}
+\usepackage{import}
+\usepackage{float}
+\usepackage{comment}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes, positioning, babel}
+\usepackage{adjustbox}
+\usepackage[american]{circuitikz}
+\usepackage{siunitx}
+\DeclareSIUnit{\dBm}{dBm}
+
+\usepackage{caption}
+
+\usepackage{seqsplit} % Breaklines en texttt
+
+% Para el código
+\usepackage{minted}
+\usemintedstyle{emacs}
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\renewcommand\listingscaption{Código}
+\setminted{
+  linenos,
+  frame=lines,
+  framesep=2mm,
+  baselinestretch=1.2,
+  fontsize=\footnotesize,
+  breaklines=true,
+  tabsize=4,
+  numbersep=5pt,
+  xleftmargin=1.5em,
+  xrightmargin=1.5em
+}
+\setmintedinline{breaklines}
+\usepackage{changepage}
+
+\usepackage{csquotes} % Comillas
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Pregunta
+\newcommand{\px}[1]{
+    \vspace{0.5em}
+    \indent\textbf{P$\backslash$} #1
+    \par\vspace{0.2em}
+}
+
+% --- Styles ---
+\tikzset{
+  startstop/.style={
+    rectangle, rounded corners=4pt,
+    minimum width=3.2cm, minimum height=0.9cm,
+    draw=black!70, fill=black!10,
+    font=\small\bfseries
+  },
+  process/.style={
+    rectangle, rounded corners=4pt,
+    minimum width=5.2cm, minimum height=0.9cm,
+    draw=black!60, fill=blue!8,
+    font=\small, text centered, text width=5cm
+  },
+  standby/.style={
+    rectangle, rounded corners=4pt,
+    minimum width=3.2cm, minimum height=0.9cm,
+    draw=black!50, fill=gray!12,
+    font=\small\itshape
+  },
+  decision/.style={
+    diamond, aspect=2.8,
+    minimum width=6cm, minimum height=1.2cm,
+    draw=black!60, fill=orange!12,
+    font=\small, text centered, inner sep=2pt
+  },
+  action/.style={
+    rectangle, rounded corners=4pt,
+    minimum width=3.4cm, minimum height=0.9cm,
+    draw=black!60, fill=teal!15,
+    font=\small, text centered
+  },
+  arrow/.style={
+    -Stealth, thick, draw=black!60
+  }
+}
+

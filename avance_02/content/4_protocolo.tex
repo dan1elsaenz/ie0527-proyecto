@@ -1,0 +1,85 @@
+% 5_protocolo.tex
+
+% Una descripción del protocolo de transmisión utilizado para enviar la información de audio.
+\section{Protocolo de transmisión}
+
+Para el proyecto, el protocolo de transmisión aprovechará los mecanismos que ofrece el \textit{Enhanced ShockBurst}, ya implementado en el nRF24L01.
+Este ofrece ensamblaje y sincronización automáticos de paquetes, así como confirmación y retransmisión automáticas.
+El Cuadro \ref{tab:shockburst} muestra la estructura de bytes que utiliza este protocolo.
+
+\begin{table}[htb]
+    \centering
+    \caption{Estructura del paquete \textit{Enhanced ShockBurst} \cite{nordic}.}
+    \label{tab:shockburst}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Preamble & Address & Packet Control Field & Payload & CRC \\
+        \SI{1}{\byte} & $3$--\SI{5}{\byte} & \SI{9}{\bit} & $0$--\SI{32}{\byte} & $1$--\SI{2}{\byte} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+A continuación se describe cada campo del paquete \textit{Enhanced ShockBurst}:
+
+\begin{itemize}
+    \item \texttt{Preamble:} Corresponde a una secuencia inicial de bits que permite al receptor sincronizarse con la señal recibida e identificar correctamente el inicio del paquete.
+    En el módulo NRF24L01, esta secuencia se genera automáticamente y depende del primer bit del campo \texttt{Address}, con el fin de facilitar la identificación correcta de los bits recibidos \cite{nordic}.
+
+    \item \texttt{Address:} Corresponde a la dirección lógica del receptor al que va dirigido el paquete.
+    Este campo permite que el receptor identifique si la información recibida le corresponde y así evita aceptar paquetes destinados a otros dispositivos.
+    Su tamaño puede configurarse mediante el registro \texttt{AW}, lo cual permite seleccionar entre distintas longitudes de dirección \cite{nordic}.
+
+    \item \texttt{Packet Control Field:} Corresponde a un campo de control compuesto por tres subcampos.
+    El subcampo \texttt{Payload Length} indica la cantidad de bytes contenidos en el campo \texttt{Payload}, utilizado cuando está habilitado el modo de longitud dinámica.
+    El subcampo \texttt{PID} permite identificar los paquetes transmitidos y distinguir entre paquetes nuevos y retransmitidos, para evitar que un mismo \texttt{Payload} sea entregado más de una vez al microprocesador.
+    El subcampo \texttt{NO\_ACK}, de \SI{1}{\bit}, indica si se solicita o no una confirmación de recepción; cuando este bit es $0$, el receptor envía una confirmación al transmisor, y cuando es $1$, no se solicita confirmación ni se realizan retransmisiones \cite{nordic}.
+
+    \item \texttt{Payload:} Corresponde al campo que contiene la información útil definida por el usuario.
+    En el módulo NRF24L01, este campo puede tener una longitud de entre $0$ y \SI{32}{\byte}.
+    En el contexto de este proyecto, el \texttt{Payload} contiene los datos asociados a las muestras de audio digitalizadas \cite{nordic}.
+
+    \item \texttt{CRC} (\textit{Cyclic Redundancy Check}): Corresponde al mecanismo de detección de errores del paquete.
+    Este campo puede tener una longitud de $1$ o \SI{2}{\byte} y se calcula a partir del \texttt{Packet Control Field} y del \texttt{Payload}.
+    Una vez recibido el paquete, el receptor calcula nuevamente el valor del \texttt{CRC} y lo compara con el recibido; si ambos valores no coinciden, el paquete es descartado \cite{nordic}.
+\end{itemize}
+
+Durante la transmisión, \textit{Enhanced ShockBurst} ensambla los paquetes y sincroniza la transmisión de bits con el transmisor.
+Durante la recepción, busca constantemente una dirección válida en la señal demodulada y, al encontrarla, procesa el resto del paquete y lo valida mediante \texttt{CRC}.
+Si el paquete es válido, la carga útil se mueve a la FIFO de recepción; de lo contrario, el paquete se descarta automáticamente \cite{nordic}.
+De esta forma, se transmiten los datos de forma confiable, con retransmisiones automáticas en caso de que el nodo transmisor no reciba la confirmación por parte del receptor.
+
+\subsection{Organización de la transferencia de audio} \label{sec:organizacion_transferencia}
+
+El \textit{Enhanced ShockBurst} brinda los recursos para una entrega confiable de paquetes individuales; sin embargo, no considera cómo identificar el inicio o el fin de una transmisión de audio ni cómo organizar los fragmentos recibidos para reconstruir el archivo completo.
+Por esta razón, el protocolo de la aplicación define tres tipos de mensajes: \texttt{START}, \texttt{DATA} y \texttt{END}, que se implementan en software sobre los mecanismos del NRF24L01.
+
+\begin{itemize}
+    \item \texttt{START:} Indica el inicio de la transmisión, de forma que el nodo receptor salga del estado de espera y se prepare para recibir los datos de audio.
+    Al recibir este mensaje, el receptor crea el archivo donde se almacenarán temporalmente los datos recibidos y registra los parámetros de codificación necesarios para reconstruir el audio.
+
+    \item \texttt{DATA:} Contiene los datos de audio con una capacidad máxima de \SI{32}{\byte} por paquete.
+    Con el fin de monitorear la correcta recepción de los datos, se reservan algunos bytes para información de control, distribuyendo los \SI{32}{\byte} del \texttt{Payload} como se muestra en el Cuadro \ref{tab:payload}.
+
+\begin{table}[h]
+    \centering
+    \caption{Propuesta de asignación de bytes para el paquete \texttt{DATA}.}
+    \label{tab:payload}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        Tipo & Número de bloque & Datos de audio \\
+        \SI{1}{\byte} & \SI{2}{\byte} & \SI{29}{\byte} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+    El campo \texttt{Tipo} funciona como identificador del mensaje, permitiendo que el receptor distinga entre los comandos \texttt{START}, \texttt{DATA} y \texttt{END}.
+    Dado que existen únicamente tres tipos de mensajes, \SI{1}{\byte} es suficiente para codificarlos.
+    El campo \texttt{Número de bloque} enumera cada paquete de datos, lo que permite al receptor verificar que los bloques se reciben en el mismo orden en que fueron transmitidos y detectar posibles pérdidas.
+    Se reservan \SI{2}{\byte}, lo que permite enumerar hasta $65535$ bloques, cantidad suficiente para cubrir el caso más exigente del proyecto, correspondiente a un mensaje de \SI{15}{\second}.
+    El campo \texttt{Datos de audio} corresponde a la información útil procesada y reconstruida por el receptor, con una longitud de \SI{29}{\byte} resultante de los bytes restantes del \texttt{Payload}.
+
+    \item \texttt{END:} Indica que todos los paquetes de audio fueron enviados y que la etapa de transmisión ha finalizado.
+    Al recibirlo, el receptor detiene el almacenamiento de nuevos datos y procede a verificar la integridad de la información recibida.
+    En esta etapa, el receptor compara la cantidad de paquetes recibidos con la indicada en el mensaje \texttt{START}, revisa que la numeración de los bloques sea continua y confirma que no existan datos faltantes.
+    Una vez validada la estructura de la información, reconstruye el archivo de audio en formato WAV, reproduce el contenido recibido y regresa al modo de espera.
+\end{itemize}

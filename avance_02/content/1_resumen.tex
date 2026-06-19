@@ -1,0 +1,16 @@
+% 1_resumen.tex
+
+\begin{abstract}
+Este documento corresponde al segundo avance del proyecto de transmisión inalámbrica de audio y se presenta la propuesta de diseño del sistema junto con el protocolo de transmisión definido para su implementación.
+Primero, se describe la arquitectura de dos nodos ideada: un transmisor y un receptor, cada uno basado en una Raspberry Pi Zero y un transceiver NRF24L01+PA+LNA que opera en la banda ISM de 2.4 GHz.
+El nodo transmisor incorpora el micrófono digital INMP441 para la captura de audio, mientras que el nodo receptor utiliza el módulo NS4168 con parlante 3070 para la reproducción.
+
+Asimismo, se definen los parámetros de digitalización base del sistema: audio mono a 8 kHz con resolución de 8 bits por muestra en formato PCM, con ADPCM como optimización opcional para reducir el volumen de datos transmitidos.
+El protocolo de transmisión se estructura sobre el mecanismo \textit{Enhanced ShockBurst} del NRF24L01, que gestiona automáticamente la verificación CRC, las confirmaciones de recepción y las retransmisiones.
+Se presentan además los diagramas de bloques de la arquitectura del sistema, el diagrama de flujo del algoritmo propuesto y la asignación de pines GPIO para cada nodo.
+\end{abstract}
+
+\begin{IEEEkeywords}
+% En orden alfabético
+Audio digital, banda ISM, \textit{Enhanced ShockBurst}, fragmentación de paquetes, GPIO, I2S, INMP441, NRF24L01, NS4168, Raspberry Pi Zero
+\end{IEEEkeywords}
