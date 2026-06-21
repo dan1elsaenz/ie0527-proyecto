@@ -1,0 +1,7 @@
+# Dependencias del sistema
+# Comando: pip install -r requirements.txt
+
+numpy
+sounddevice
+gpiozero
+pyrf24
