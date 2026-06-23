@@ -7,7 +7,11 @@ del nRF24:
 
   START : 0x01 | total_blocks(2) | fs(2) | bits(1) | channels(1) | codec(1)
   DATA  : 0x02 | seq(2)          | audio(29 como máximo)
-  END   : 0x03 | total_blocks(2)
+  END   : 0x03
+
+El total de bloques se envía solo en el START (el transmisor lo conoce de
+antemano porque graba y fragmenta todo antes de transmitir). El END es un simple
+marcador de fin de transmisión.
 """
 
 import struct
@@ -74,9 +78,9 @@ def pack_data(seq, chunk):
     return struct.pack(">BH", T_DATA, seq) + bytes(chunk)
 
 
-def pack_end(total_blocks):
-    """Construye el paquete END con el total de bloques para verificación."""
-    return struct.pack(">BH", T_END, total_blocks)
+def pack_end():
+    """Construye el paquete END."""
+    return struct.pack(">B", T_END)
 
 
 def parse_packet(payload):
@@ -93,14 +97,9 @@ def parse_packet(payload):
         seq = struct.unpack(">H", payload[1:3])[0] # Extraer seq
         return T_DATA, seq, payload[3:]
     if msg_type in (T_START, T_END):
-        # Pasar payload a parse_start/end_total_blocks
+        # Pasar el payload completo a parse_start
         return msg_type, None, payload
     return msg_type, None, payload[1:]
-
-
-def end_total_blocks(payload):
-    """Extrae el total de bloques de un paquete END."""
-    return struct.unpack(">H", bytes(payload)[1:3])[0]
 
 
 def chunk_bytes(data, size=DATA_BYTES):
