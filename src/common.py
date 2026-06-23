@@ -130,6 +130,13 @@ def pcm24_to_u8(samples, gain=1.0):
     return u8.tobytes()
 
 
+def u8_to_pcm16(pcm_bytes):
+    """Convierte PCM de 8 bits sin signo (0-255, 128 = cero) a muestras int16
+    centradas en 0."""
+    u8 = np.frombuffer(bytes(pcm_bytes), dtype=np.uint8)
+    return ((u8.astype(np.int16) - 128) * 256).astype(np.int16)
+
+
 def build_wav(path, pcm_bytes, fs=SAMPLE_RATE, bits=BITS, channels=CHANNELS):
     """Escribe un archivo WAV a partir de los bytes PCM crudos. Incluye
     el header de 44 bytes."""
