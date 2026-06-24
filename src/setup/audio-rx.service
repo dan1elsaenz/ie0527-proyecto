@@ -1,0 +1,17 @@
+[Unit]
+Description=Nodo receptor de audio inalambrico
+After=multi-user.target sound.target
+
+[Service]
+Type=simple
+User=rx
+WorkingDirectory=/home/rx/ie0527-proyecto/src
+ExecStart=/usr/bin/python3 /home/rx/ie0527-proyecto/src/rx.py
+Restart=always
+RestartSec=2
+# Apagado limpio
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

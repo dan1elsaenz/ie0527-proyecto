@@ -1,0 +1,17 @@
+[Unit]
+Description=Nodo transmisor de audio inalambrico
+After=multi-user.target sound.target
+
+[Service]
+Type=simple
+User=tx
+WorkingDirectory=/home/tx/ie0527-proyecto/src
+ExecStart=/usr/bin/python3 /home/tx/ie0527-proyecto/src/tx.py
+Restart=always
+RestartSec=2
+# Apagado limpio
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
