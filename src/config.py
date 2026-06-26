@@ -85,5 +85,10 @@ PIN_LED_RED = 23
 STATE_TIMEOUT = 3.0      # Tiempo que permanecen los estados SUCCESS/ERROR antes de IDLE
 RX_PACKET_TIMEOUT = 5.0  # Tiempo sin paquetes durante recepción
 
+# Tolerancia de pérdida en el receptor: % máximo de bloques faltantes que aún se
+# reproduce (rellenando los huecos con silencio). Por encima de esto -> ERROR.
+# 0 = exige el archivo completo. Con ADPCM conviene un valor más bajo.
+MAX_LOSS_PCT = 5.0
+
 # Carpeta para archivos WAV temporales en el receptor.
 AUDIO_TMP_DIR = "/tmp/audio_rx"

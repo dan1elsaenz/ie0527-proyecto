@@ -102,23 +102,33 @@ class Receiver:
             self.state = VERIFYING
 
     def _state_verifying(self):
-        """Comprueba que estén todos los bloques (0..total-1) antes de
-        reconstruir el audio."""
+        """Acepta la transmisión si faltan a lo sumo MAX_LOSS_PCT de los bloques
+        (los huecos se rellenan con silencio en PLAYING); si faltan más, ERROR."""
         total = self.params["total_blocks"]
-        missing = [i for i in range(total) if i not in self.blocks]
-        if missing:
-            print(f"Archivo incompleto: faltan {len(missing)} de {total}.")
-            self.state = ERROR
-        else:
-            print("Archivo completo.")
+        faltan = total - len(self.blocks)
+        pct = 100.0 * faltan / total if total else 0.0
+        if pct <= config.MAX_LOSS_PCT:
+            if faltan:
+                print(f"Faltan {faltan}/{total} bloques ({pct:.1f}%) -> "
+                      f"se rellenan con silencio.")
+            else:
+                print("Archivo completo.")
             self.state = PLAYING
+        else:
+            print(f"Demasiada pérdida: {faltan}/{total} bloques ({pct:.1f}% > "
+                  f"{config.MAX_LOSS_PCT}%).")
+            self.state = ERROR
 
     def _state_playing(self):
-        """Reensambla los bytes recibidos, los decodifica según el códec del
-        START, reconstruye el WAV y lo reproduce por el DAC."""
+        """Reensambla los bytes recibidos (rellenando los bloques faltantes con
+        silencio), los decodifica según el códec del START, reconstruye el WAV y
+        lo reproduce por el DAC."""
         self.signals.playing()
         total = self.params["total_blocks"]
-        encoded = b"".join(self.blocks[i] for i in range(total))
+        # Byte de silencio según el códec: PCM unsigned -> 128; ADPCM -> 0.
+        fill = (b"\x80" if self.params["codec"] == "pcm" else b"\x00") \
+            * config.DATA_BYTES
+        encoded = b"".join(self.blocks.get(i, fill) for i in range(total))
         # Decodificar a int16 según el códec (pcm o adpcm).
         samples = common.decode_audio(encoded, self.params["codec"])
         path = os.path.join(config.AUDIO_TMP_DIR, "recibido.wav")
