@@ -114,17 +114,19 @@ class Receiver:
             self.state = PLAYING
 
     def _state_playing(self):
-        """Reensambla el PCM en orden, reconstruye el archivo WAV y lo reproduce
-        por el módulo de audio."""
+        """Reensambla los bytes recibidos, los decodifica según el códec del
+        START, reconstruye el WAV y lo reproduce por el DAC."""
         self.signals.playing()
         total = self.params["total_blocks"]
-        pcm = b"".join(self.blocks[i] for i in range(total))
+        encoded = b"".join(self.blocks[i] for i in range(total))
+        # Decodificar a int16 según el códec (pcm o adpcm).
+        samples = common.decode_audio(encoded, self.params["codec"])
         path = os.path.join(config.AUDIO_TMP_DIR, "recibido.wav")
-        common.build_wav(path, pcm, fs=self.params["fs"],
-                         bits=self.params["bits"],
-                         channels=self.params["channels"])
-        print(f"Reproduciendo {path} ({len(pcm)} bytes)...")
-        self._play(pcm)
+        common.build_wav(path, samples.tobytes(), fs=self.params["fs"],
+                         bits=16, channels=self.params["channels"])
+        print(f"Reproduciendo {path} ({len(encoded)} bytes, "
+              f"codec={self.params['codec']})...")
+        self._play(samples)
         self.state = SUCCESS
 
     def _state_success(self):
@@ -139,9 +141,8 @@ class Receiver:
         time.sleep(config.STATE_TIMEOUT)
         self._reset()
 
-    def _play(self, pcm):
-        """Reproduce PCM de 8 bits unsigned por el módulo NS4168."""
-        samples = common.u8_to_pcm16(pcm)
+    def _play(self, samples):
+        """Reproduce muestras int16 ya decodificadas por el DAC PCM5102 (I2S)."""
         sd.play(samples, samplerate=self.params["fs"], blocking=True)
 
     def _reset(self):

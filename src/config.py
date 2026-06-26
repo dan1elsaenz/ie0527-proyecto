@@ -44,8 +44,10 @@ SAMPLE_RATE = 8000      # Hz
 BITS = 8                # bits por muestra
 CHANNELS = 1            # mono
 
-# Códec de la carga de audio
-CODEC = "pcm"
+# Códec de la carga de audio:
+#   "pcm"   -> PCM lineal 8 bits (64 kbps)
+#   "adpcm" -> IMA ADPCM 4 bits (~32 kbps)
+CODEC = "adpcm"
 
 # Ganancia digital aplicada al pasar de 24 a 8 bits
 # Hay que ajustar.

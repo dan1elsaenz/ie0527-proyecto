@@ -130,7 +130,7 @@ class Transmitter:
         # Solo el canal izquierdo del frame I2S (mono).
         if samples.ndim > 1:
             samples = samples[:, 0]
-        self._pcm = common.pcm24_to_u8(samples, gain=config.MIC_GAIN)
+        self._pcm = common.encode_audio(samples, config.MIC_GAIN, config.CODEC)
         self._chunks = common.chunk_bytes(self._pcm)
         print(f"Capturado: {len(self._pcm)} bytes -> "
               f"{len(self._chunks)} paquetes")
