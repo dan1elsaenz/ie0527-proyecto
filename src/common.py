@@ -144,9 +144,7 @@ def u8_to_pcm16(pcm_bytes):
 # Compresión IMA ADPCM
 # ———————————————————————————————————————————————————————————————————————————
 
-# Tablas estándar IMA/DVI ADPCM. Como tuplas de Python (no numpy): indexar dentro
-# del bucle muestra-a-muestra es mucho más rápido que con arrays numpy, lo que
-# importa en la Raspberry Pi Zero.
+# Tablas estándar IMA/DVI ADPCM
 _ADPCM_INDEX_TABLE = (-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8)
 _ADPCM_STEP_TABLE = (
     7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41,
@@ -272,6 +270,35 @@ def decode_audio(data, codec="pcm"):
     if codec == "adpcm":
         return ima_adpcm_decode(data)
     return u8_to_pcm16(data)              # pcm default
+
+
+# ———————————————————————————————————————————————————————————————————————————
+# Indicadores de enlace del receptor
+# ———————————————————————————————————————————————————————————————————————————
+
+def link_report(audio_bytes, duration_s, received, total, rpd_hits, pkts,
+                codec="pcm", nominal_rate=""):
+    """Construye el resumen de indicadores de la transmisión para imprimir en el
+    receptor. Función pura (sin hardware), testeable.
+
+    - audio_bytes : bytes de audio recibidos (carga útil DATA).
+    - duration_s  : duración de la transmisión (START -> END), en segundos.
+    - received/total : bloques recibidos vs esperados (calidad de enlace / PER).
+    - rpd_hits/pkts  : paquetes con señal > -64 dBm (RPD) sobre paquetes muestreados.
+    - nominal_rate   : tasa RF configurada (ej. "1Mbps"), solo informativa.
+    """
+    kbps = (audio_bytes * 8 / duration_s / 1000.0) if duration_s > 0 else 0.0
+    perdida = 100.0 * (total - received) / total if total else 0.0
+    rpd_pct = 100.0 * rpd_hits / pkts if pkts else 0.0
+    nominal = f"  (nominal {nominal_rate})" if nominal_rate else ""
+    return (
+        "--- Indicadores de la transmisión ---\n"
+        f"Duración:       {duration_s:.2f} s\n"
+        f"Audio:          {audio_bytes} bytes ({codec})\n"
+        f"Tasa efectiva:  {kbps:.1f} kbps{nominal}\n"
+        f"Calidad enlace: {received}/{total} bloques ({perdida:.2f}% perdida)\n"
+        f"Señal (RPD):    {rpd_pct:.0f}% de paquetes > -64 dBm"
+    )
 
 
 def build_wav(path, pcm_bytes, fs=SAMPLE_RATE, bits=BITS, channels=CHANNELS):

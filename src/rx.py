@@ -39,6 +39,13 @@ class Receiver:
         self.blocks = {}    # Bytes de audio
         self.last_rx = 0.0  # Marca de tiempo del último paquete
 
+        # Indicadores de la transmisión (se reinician en cada START).
+        self.t_start = 0.0  # tiempo del START recibido
+        self.t_end = 0.0    # tiempo del END recibido
+        self.bytes_rx = 0   # bytes de audio recibidos (carga DATA)
+        self.rpd_hits = 0   # paquetes con señal > -64 dBm (RPD)
+        self.pkts = 0       # paquetes muestreados
+
         os.makedirs(config.AUDIO_TMP_DIR, exist_ok=True)
         atexit.register(self.cleanup)
 
@@ -79,6 +86,12 @@ class Receiver:
             self.params = common.parse_start(raw)
             self.blocks = {}
             self.last_rx = time.time()
+            # Reiniciar indicadores para esta transmisión.
+            self.t_start = self.last_rx
+            self.t_end = 0.0
+            self.bytes_rx = 0
+            self.rpd_hits = 0
+            self.pkts = 0
             print(f"START: {self.params['total_blocks']} bloques esperados")
             self.signals.receiving()
             self.state = RECEIVING
@@ -95,10 +108,16 @@ class Receiver:
                 time.sleep(0.001)
             return
         self.last_rx = time.time()
+        # Muestrear el RPD (indicador de señal) por cada paquete recibido.
+        self.pkts += 1
+        if radio_mod.read_rpd(self.radio):
+            self.rpd_hits += 1
         msg_type, seq, data = common.parse_packet(payload)
         if msg_type == common.T_DATA:
             self.blocks[seq] = data
+            self.bytes_rx += len(data)
         elif msg_type == common.T_END:
+            self.t_end = self.last_rx
             self.state = VERIFYING
 
     def _state_verifying(self):
@@ -136,8 +155,26 @@ class Receiver:
                          bits=16, channels=self.params["channels"])
         print(f"Reproduciendo {path} ({len(encoded)} bytes, "
               f"codec={self.params['codec']})...")
+        self._print_link_report()
         self._play(samples)
         self.state = SUCCESS
+
+    def _print_link_report(self):
+        """Imprime los indicadores de la transmisión (duración, tasa efectiva,
+        calidad de enlace y RPD)."""
+        if not self.params:
+            return
+        end = self.t_end or self.last_rx
+        print(common.link_report(
+            audio_bytes=self.bytes_rx,
+            duration_s=end - self.t_start,
+            received=len(self.blocks),
+            total=self.params["total_blocks"],
+            rpd_hits=self.rpd_hits,
+            pkts=self.pkts,
+            codec=self.params["codec"],
+            nominal_rate=config.RF_DATA_RATE,
+        ))
 
     def _state_success(self):
         """Recepción y reproducción correctas, indica éxito y vuelve a escuchar."""
@@ -147,6 +184,7 @@ class Receiver:
 
     def _state_error(self):
         """Fallo (archivo incompleto o timeout), señaliza error y vuelve a escuchar."""
+        self._print_link_report()
         self.signals.error()
         time.sleep(config.STATE_TIMEOUT)
         self._reset()

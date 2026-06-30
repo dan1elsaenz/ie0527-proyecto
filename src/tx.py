@@ -140,7 +140,7 @@ class Transmitter:
         """Envía el paquete START con el total de bloques y los parámetros del
         audio. Si falla, pasa a ERROR."""
         self.signals.transmitting()
-        start = common.pack_start(len(self._chunks))
+        start = common.pack_start(len(self._chunks), codec=config.CODEC)
         self.state = SENDING_DATA if self._send(start) else ERROR
 
     def _state_sending_data(self):

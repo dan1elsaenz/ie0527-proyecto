@@ -13,11 +13,11 @@ RF_ADDRESS = b"AUDIO"
 # Alejado de los canales WiFi 1/6/11.
 RF_CHANNEL = 76
 
-# Tasa de datos: "250kbps", "1Mbps" o "2Mbps".
-# Se usa 1 Mbps para cumplir el tiempo de transmisión (< 60 s).
+# Tasa de datos en "250kbps", "1Mbps" o "2Mbps"
+# Se usa 1 Mbps para cumplir el tiempo de transmisión (< 60 s)
 RF_DATA_RATE = "1Mbps"
 
-# Potencia de salida: "min" (-18 dBm), "low" (-12), "high" (-6), "max" (0 dBm).
+# Potencia de salida en "min" (-18 dBm), "low" (-12), "high" (-6) o "max" (0 dBm)
 RF_PA_LEVEL = "max"
 
 # Tamaño máximo del payload del nRF24.
@@ -26,7 +26,7 @@ PAYLOAD_SIZE = 32
 # Payload dinámico.
 DYNAMIC_PAYLOADS = True
 
-# Auto-ACK (Enhanced ShockBurst): confirmación y retransmisión automáticas.
+# Auto-ACK del Enhanced ShockBurst, confirmación y retransmisión automáticas
 AUTO_ACK = True
 
 # Reintentos automáticos del ESB por paquete.
@@ -85,9 +85,7 @@ PIN_LED_RED = 23
 STATE_TIMEOUT = 3.0      # Tiempo que permanecen los estados SUCCESS/ERROR antes de IDLE
 RX_PACKET_TIMEOUT = 5.0  # Tiempo sin paquetes durante recepción
 
-# Tolerancia de pérdida en el receptor: % máximo de bloques faltantes que aún se
-# reproduce (rellenando los huecos con silencio). Por encima de esto -> ERROR.
-# 0 = exige el archivo completo. Con ADPCM conviene un valor más bajo.
+# Tolerancia de pérdida en el receptor
 MAX_LOSS_PCT = 5.0
 
 # Carpeta para archivos WAV temporales en el receptor.
