@@ -33,7 +33,6 @@ T_DATA = 0x02
 T_END = 0x03
 
 # Códigos de códec dentro del paquete START
-# Se puede expandir eventualmente
 CODEC_CODES = {"pcm": 0x00, "ulaw": 0x01, "adpcm": 0x02}
 CODEC_NAMES = {v: k for k, v in CODEC_CODES.items()}
 
@@ -112,22 +111,21 @@ def chunk_bytes(data, size=DATA_BYTES):
 # ———————————————————————————————————————————————————————————————————————————
 
 def _pcm24_to_float16(samples, gain):
-    """Lleva las muestras de 24 bits del INMP441 (left-justified en 32 bits) al
-    rango de 16 bits con signo como float, aplicando la ganancia con saturación.
-    Front-end común de pcm24_to_pcm16 y pcm24_to_u8."""
+    """Lleva las muestras de 24 bits del INMP441 al rango de 16 bits con
+    signo como float, aplicando la ganancia con saturación."""
     s = np.asarray(samples, dtype=np.int32)
     s16 = (s >> 16).astype(np.float32)        # rango [-32768, 32767]
     return np.clip(s16 * gain, -32768.0, 32767.0)
 
 
 def pcm24_to_pcm16(samples, gain=1.0):
-    """Convierte muestras de 24 bits con signo (del INMP441) a int16."""
+    """Convierte muestras de 24 bits con signo a int16."""
     return np.round(_pcm24_to_float16(samples, gain)).astype(np.int16)
 
 
 def pcm24_to_u8(samples, gain=1.0):
     """Convierte muestras PCM de 24 bits con signo a PCM de 8 bits unsigned
-    (0-255, 128 = cero), tomando los 8 MSB con redondeo al más cercano."""
+    (0-255, 128 = cero) y toma los 8 MSB con redondeo al más cercano."""
     s16 = _pcm24_to_float16(samples, gain)
     u8 = np.clip(np.round(s16 / 256.0) + 128.0, 0, 255).astype(np.uint8)
     return u8.tobytes()
@@ -158,12 +156,7 @@ _ADPCM_STEP_TABLE = (
 
 
 def ima_adpcm_encode(samples_int16):
-    """Comprime muestras int16 a IMA ADPCM de 4 bits/muestra. Devuelve bytes
-    (2 muestras por byte). Codifica el buffer completo en una sola pasada para
-    mantener la continuidad del estado (predictor + índice).
-
-    Bucle en int puro de Python (sin indexar numpy) por velocidad en la Pi Zero.
-    """
+    """Comprime muestras int16 a IMA ADPCM de 4 bits/muestra."""
     step_table = _ADPCM_STEP_TABLE
     index_table = _ADPCM_INDEX_TABLE
     predictor = 0
@@ -253,7 +246,7 @@ def ima_adpcm_decode(data):
 
 
 # ———————————————————————————————————————————————————————————————————————————
-# Despacho por códec (lo que usan tx.py y rx.py)
+# Despacho por códec
 # ———————————————————————————————————————————————————————————————————————————
 
 def encode_audio(samples24, gain=1.0, codec=CODEC):
@@ -279,18 +272,12 @@ def decode_audio(data, codec="pcm"):
 def link_report(audio_bytes, duration_s, received, total,
                 codec="pcm", nominal_rate=""):
     """Construye el resumen de indicadores de la transmisión para imprimir en el
-    receptor. Función pura (sin hardware), testeable.
-
-    - audio_bytes : bytes de audio recibidos (carga útil DATA).
-    - duration_s  : duración de la transmisión (START -> END), en segundos.
-    - received/total : bloques recibidos vs esperados (calidad de enlace / PER).
-    - nominal_rate   : tasa RF configurada (ej. "1Mbps"), solo informativa.
-    """
+    receptor."""
     kbps = (audio_bytes * 8 / duration_s / 1000.0) if duration_s > 0 else 0.0
     perdida = 100.0 * (total - received) / total if total else 0.0
     nominal = f"  (nominal {nominal_rate})" if nominal_rate else ""
     return (
-        "--- Indicadores de la transmisión ---\n"
+        "\n——— Indicadores de la transmisión ———\n"
         f"Duración:       {duration_s:.2f} s\n"
         f"Audio:          {audio_bytes} bytes ({codec})\n"
         f"Tasa efectiva:  {kbps:.1f} kbps{nominal}\n"
