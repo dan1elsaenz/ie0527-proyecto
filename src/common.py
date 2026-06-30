@@ -276,7 +276,7 @@ def decode_audio(data, codec="pcm"):
 # Indicadores de enlace del receptor
 # ———————————————————————————————————————————————————————————————————————————
 
-def link_report(audio_bytes, duration_s, received, total, rpd_hits, pkts,
+def link_report(audio_bytes, duration_s, received, total,
                 codec="pcm", nominal_rate=""):
     """Construye el resumen de indicadores de la transmisión para imprimir en el
     receptor. Función pura (sin hardware), testeable.
@@ -284,20 +284,17 @@ def link_report(audio_bytes, duration_s, received, total, rpd_hits, pkts,
     - audio_bytes : bytes de audio recibidos (carga útil DATA).
     - duration_s  : duración de la transmisión (START -> END), en segundos.
     - received/total : bloques recibidos vs esperados (calidad de enlace / PER).
-    - rpd_hits/pkts  : paquetes con señal > -64 dBm (RPD) sobre paquetes muestreados.
     - nominal_rate   : tasa RF configurada (ej. "1Mbps"), solo informativa.
     """
     kbps = (audio_bytes * 8 / duration_s / 1000.0) if duration_s > 0 else 0.0
     perdida = 100.0 * (total - received) / total if total else 0.0
-    rpd_pct = 100.0 * rpd_hits / pkts if pkts else 0.0
     nominal = f"  (nominal {nominal_rate})" if nominal_rate else ""
     return (
         "--- Indicadores de la transmisión ---\n"
         f"Duración:       {duration_s:.2f} s\n"
         f"Audio:          {audio_bytes} bytes ({codec})\n"
         f"Tasa efectiva:  {kbps:.1f} kbps{nominal}\n"
-        f"Calidad enlace: {received}/{total} bloques ({perdida:.2f}% perdida)\n"
-        f"Señal (RPD):    {rpd_pct:.0f}% de paquetes > -64 dBm"
+        f"Calidad enlace: {received}/{total} bloques ({perdida:.2f}% perdida)"
     )
 
 

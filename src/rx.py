@@ -43,8 +43,6 @@ class Receiver:
         self.t_start = 0.0  # tiempo del START recibido
         self.t_end = 0.0    # tiempo del END recibido
         self.bytes_rx = 0   # bytes de audio recibidos (carga DATA)
-        self.rpd_hits = 0   # paquetes con señal > -64 dBm (RPD)
-        self.pkts = 0       # paquetes muestreados
 
         os.makedirs(config.AUDIO_TMP_DIR, exist_ok=True)
         atexit.register(self.cleanup)
@@ -90,8 +88,6 @@ class Receiver:
             self.t_start = self.last_rx
             self.t_end = 0.0
             self.bytes_rx = 0
-            self.rpd_hits = 0
-            self.pkts = 0
             print(f"START: {self.params['total_blocks']} bloques esperados")
             self.signals.receiving()
             self.state = RECEIVING
@@ -108,10 +104,6 @@ class Receiver:
                 time.sleep(0.001)
             return
         self.last_rx = time.time()
-        # Muestrear el RPD (indicador de señal) por cada paquete recibido.
-        self.pkts += 1
-        if radio_mod.read_rpd(self.radio):
-            self.rpd_hits += 1
         msg_type, seq, data = common.parse_packet(payload)
         if msg_type == common.T_DATA:
             self.blocks[seq] = data
@@ -160,8 +152,8 @@ class Receiver:
         self.state = SUCCESS
 
     def _print_link_report(self):
-        """Imprime los indicadores de la transmisión (duración, tasa efectiva,
-        calidad de enlace y RPD)."""
+        """Imprime los indicadores de la transmisión (duración, tasa efectiva y
+        calidad de enlace)."""
         if not self.params:
             return
         end = self.t_end or self.last_rx
@@ -170,8 +162,6 @@ class Receiver:
             duration_s=end - self.t_start,
             received=len(self.blocks),
             total=self.params["total_blocks"],
-            rpd_hits=self.rpd_hits,
-            pkts=self.pkts,
             codec=self.params["codec"],
             nominal_rate=config.RF_DATA_RATE,
         ))
