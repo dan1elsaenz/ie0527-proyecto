@@ -1,0 +1,16 @@
+% -------------------------------------------------------------
+% | Generate and inject metadate in the produced PDF document |
+% -------------------------------------------------------------
+
+\makeatletter
+\AtBeginDocument{%
+  \hypersetup{
+    pdftitle    = {\@title},
+    pdfauthor   = {Daniel Alberto Sáenz Obando},
+    pdfsubject  = {\@subtitle},
+    pdfkeywords = {\@courseinitials\space \@coursename},
+    pdfproducer = {LaTeX},
+    pdfcreator  = {pdfLaTeX},
+  }%
+}
+\makeatother

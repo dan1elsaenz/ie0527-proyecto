@@ -1,0 +1,71 @@
+\documentclass[12pt,letterpaper]{article}
+
+\input{config/preamble}
+\input{config/page_setup}
+\input{config/parameters.tex}
+\input{config/title}
+\input{config/hyperef.doc.info.tex}
+
+% Siglas y nombre del curso
+\courseinitials{IE-0527}
+\coursename{Ingeniería de Comunicaciones}
+
+% Información de la universidad
+\faculty{Escuela de Ingeniería Eléctrica}
+\university{Universidad de Costa Rica}
+
+% Profesor
+\profname{Ing. Gustavo Núñez, Ph.D.}
+
+% Título
+\title{Proyecto final}
+\subtitle{Sistema de transmisión inalámbrica de audio: análisis, diseño, implementación y pruebas}
+
+
+% Estudiantes
+\author{%
+  Daniel Alberto Sáenz Obando \\
+  Marlon Gutiérrez Vásquez \\
+  Andrés Víquez Zamora \\
+  Guillermo Escobar Arrieta
+}
+\studentcard{%
+  C37099 \\
+  C33619 \\
+  C28548 \\
+  C22706
+}
+
+\DTMsavedate{deadline}{2026-07-03}
+
+\begin{document}
+
+% Portada
+\maketitle
+\newpage
+
+% Tabla de contenidos
+\tableofcontents
+\newpage
+
+% Numeración de ecuaciones, figuras y tablas por sección
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+
+% Contenidos
+\input{content/1_resumen}
+\input{content/2_problema}
+\input{content/3_principios}
+\input{content/4_medio}
+\input{content/5_solucion}
+\input{content/6_algoritmo}
+\input{content/7_protocolo}
+\input{content/8_codigo}
+\input{content/9_pruebas}
+\input{content/10_conclusiones}
+
+% Referencias bibliográficas
+\printbibliography
+
+\end{document}

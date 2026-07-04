@@ -1,0 +1,108 @@
+% CONFIGURACIÓN DEL TÍTULO
+
+\makeatletter
+\renewcommand{\maketitle}{%
+  \begin{titlepage}
+    \centering
+    \vspace*{\fill} % Centrar
+
+    % Universidad y facultad
+    {
+      {\huge{\textsc{\@university}}}
+      \\[0.3cm]
+      {\Large\textsc{\@faculty}}
+      \\[0.25cm]
+    }
+    \rule[0.1cm]{15.8cm}{0.1mm}
+    \rule[0.5cm]{15.8cm}{0.6mm}
+    \vspace{0.5cm}
+
+    % Curso
+    {\large \textsc{\@courseinitials: \@coursename} \par}
+    \vspace{2cm}
+
+    % Título
+    {\Huge\bfseries \@title \par}
+    \vspace{0.5cm}
+    {\Large \@subtitle \par}
+    \vspace{2cm}
+
+    % Profesor
+    {\large \textbf{Profesor:}\\ \@profname \par}
+    \vspace{3cm}
+
+    % Nombres y carnets
+    \begin{minipage}[t]{0.4\textwidth}
+    \begin{flushleft} \large
+    \@author
+    \end{flushleft}
+    \end{minipage}
+    ~
+    \begin{minipage}[t]{0.1\textwidth}
+    \begin{flushright} \large
+    \@studentcard
+    \end{flushright}
+    \end{minipage}\\[1cm]
+    \vspace{2cm}
+
+    % Fecha de entrega
+    {\large \DTMusedate{deadline}}\\[1cm]
+    \vspace*{\fill}
+
+  \end{titlepage}
+}
+\makeatother
+
+% \begin{titlepage}
+%
+% % Pequeño espacio al incio
+% \null\vspace{1cm}
+%
+% % Cambio de grosor para la línea del título
+% \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+%
+% % Centrar portada
+% \center
+%
+% % Información de la universidad y curso
+% \textsc{\LARGE \MakeUppercase{\university}}\\[1.5cm]
+% \textsc{\Large \faculty}\\[0.5cm]
+% \textsc{\large \courseinitials: \coursename}\\[0.5cm]
+%
+% \vspace{1cm}
+%
+% % Título y subtítulo
+% \HRule \\[0.4cm]
+% {
+% \LARGE{\bfseries{\reporttitle}}\\[0.5cm]
+% \Large{\bfseries{\reportsubtitle}}
+% }\\[0.4cm]
+% \HRule \\[0.5cm]
+%
+% \vspace{1cm}
+%
+% % Nombre del profesor
+% \large{\textbf{Profesor:}\\ \profname}
+% \vspace{3cm}
+%
+% % Nombres y carnets
+% \begin{minipage}[t]{0.4\textwidth}
+% \begin{flushleft} \large
+% \studentname
+% \end{flushleft}
+% \end{minipage}
+% ~
+% \begin{minipage}[t]{0.1\textwidth}
+% \begin{flushright} \large
+% \studentcard
+% \end{flushright}
+% \end{minipage}\\[1cm]
+%
+% \vspace{3cm}
+%
+% % Fecha de entrega
+% {\large \DTMusedate{deadline}}\\[1cm]
+%
+% \vfill
+% \end{titlepage}
+%

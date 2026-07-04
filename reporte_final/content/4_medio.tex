@@ -1,0 +1,48 @@
+% 4_medio.tex
+
+% Investigue sobre el funcionamiento del medio inalámbrico seleccionado y sus limitaciones para transmisión de información digital.
+
+\section{Funcionamiento y limitaciones del medio}
+
+En el espacio libre, los campos eléctricos y magnéticos no los encierra ninguna estructura de confinamiento, por lo que pueden tener cualquier magnitud y dirección, las cuales se determinan por el dispositivo que las genere, por ejemplo, una antena \cite{Hyatt}.
+El medio inalámbrico seleccionado para transmitir la información digital es la radiofrecuencia, la cual consiste en la propagación de ondas por medio del espacio libre \cite{Hyatt}, donde las ondas transportan la información de los archivos de audio.
+Estas son emitidas y captadas por las antenas incorporadas en el emisor y el receptor.
+La función que cumplen las antenas es irradiar potencia en todas direcciones; a estas se les conoce como antenas isotrópicas, de forma que la señal sea captada por una antena receptora.
+Las ondas viajan a la velocidad de la luz, donde su potencia depende de la potencia de transmisión, y al existir pérdidas el receptor recibe las ondas electromagnéticas con una potencia menor.
+
+\subsection{Limitaciones del medio de transmisión}
+
+Dado que la comunicación se da en un medio no guiado, la información digital está expuesta a sufrir los fenómenos típicos del aire: atenuación, obstáculos que bloquean la señal, ruido electromagnético, reflexión de la onda sobre otros objetos y dispersión \cite{wireless}.
+A continuación, se explican algunos de ellos.
+
+En primer lugar, la atenuación de la señal describe cómo disminuye la potencia recibida con la distancia entre el transmisor y el receptor.
+Se debe a la disipación de la potencia radiada por el transmisor, así como a los efectos del canal de propagación.
+
+En segundo lugar, una señal transmitida por medio de un canal inalámbrico suele experimentar variaciones aleatorias debido a la obstrucción causada por objetos en su trayectoria, lo que da lugar a variaciones aleatorias en la potencia recibida a una distancia determinada.
+Dichas variaciones también se deben a cambios en las superficies reflectantes y a la dispersión de la señal por objetos.
+El \textit{shadowing}, conocido como el efecto sombra, es la atenuación causada por obstáculos entre el transmisor y el receptor que absorben la señal transmitida.
+Cuando la atenuación es significativa, el objeto puede bloquear la señal directamente.
+Esta afectación en la señal no depende directamente de la distancia entre el transmisor y el receptor, sino de la cantidad y tamaño de los objetos que se encuentren en línea de vista.
+La variación debida a este efecto se produce a distancias proporcionales a la longitud del objeto que la obstruye (\SIrange{10}{100}{\meter} en exteriores, y menos en interiores) \cite{wireless}.
+
+Luego, se tienen la reflexión, la difracción y la dispersión.
+Estos fenómenos suceden cuando elementos del entorno interactúan con los elementos del transmisor o receptor.
+Los componentes de la señal que surgen debido a estos objetos se denominan componentes de trayectos múltiples.
+Los diferentes componentes de trayectos múltiples llegan al receptor con distintos retardos y desfases \cite{wireless}.
+
+Una vez conocido el funcionamiento del canal y los fenómenos que genera, se pueden enumerar las limitaciones que presenta el método de transmisión de la información digital: ancho de banda, capacidad del canal, potencia de transmisión, distancia emisor-receptor y ruido electromagnético.
+
+\subsection{Uso de bandas no licenciadas}
+
+Según \cite{SUTEL}, el espectro radioeléctrico es un bien natural de dominio público propio de la nación costarricense, por lo que no puede salir definitivamente del dominio del Estado.
+Por esta razón, se permite la comunicación por medio de radiofrecuencia únicamente en ciertas bandas no licenciadas, como la banda de \SI{2.4}{\giga\hertz} y la de \SI{900}{\mega\hertz}, entre otras.
+Se seleccionó la banda de \SI{2.4}{\giga\hertz} porque corresponde a la frecuencia de operación del \textit{transceiver} disponible en el laboratorio.
+Además, de acuerdo con el modelo de atenuación de Friis visto en el curso, la atenuación aumenta con la frecuencia de la banda de transmisión:
+\begin{equation}
+    L = \left(\frac{4 \pi d f}{c}\right)^2,
+\end{equation}
+lo cual implica que se tiene mayor atenuación respecto a otras opciones, pero está dentro de un rango aceptable para las distancias propuestas sobre las que se realiza la comunicación punto a punto.
+
+El \textit{transceiver} NRF24L01, disponible en el laboratorio, opera en la banda ISM de \SI{2.4}{\giga\hertz}, la cual es de uso libre y no requiere licencias para su utilización.
+Sin embargo, esta banda es compartida con tecnologías como WiFi y Bluetooth, por lo que pueden presentarse interferencias que afecten la calidad de la comunicación, provoquen pérdidas de paquetes y reduzcan el alcance efectivo del enlace inalámbrico.
+

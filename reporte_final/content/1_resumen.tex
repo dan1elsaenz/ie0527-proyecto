@@ -1,0 +1,16 @@
+% 1_resumen.tex
+
+\begin{abstract}
+Este documento corresponde al reporte final del proyecto del curso IE0527: Ingeniería de Comunicaciones, el cual consiste en el desarrollo de un sistema de transmisión inalámbrica de audio.
+Se integra el análisis del problema y la investigación teórica que fundamentan el diseño, la propuesta de arquitectura de hardware y el protocolo de transmisión, junto con la implementación de la solución y la descripción de las pruebas realizadas.
+El sistema se compone de dos nodos con rol fijo, un transmisor y un receptor, basados en una Raspberry Pi Zero y un \textit{transceiver} NRF24L01+PA+LNA que opera en la banda ISM de 2.4 GHz, sin emplear protocolos inalámbricos de alto nivel.
+
+Como fundamento, se investigaron los principios de digitalización de audio (frecuencia de muestreo, cuantización, formatos y esquemas de codificación) y las limitaciones del canal inalámbrico, considerando atenuación, interferencia, \textit{shadowing} y la capacidad máxima del canal según el teorema de Shannon.
+A partir de ello, se seleccionó una configuración base de audio mono a 8 kHz con resolución de 8 bits por muestra en formato PCM, con ADPCM como optimización, y se definió un protocolo de aplicación de tres mensajes (\texttt{START}, \texttt{DATA} y \texttt{END}) sobre el mecanismo \textit{Enhanced ShockBurst} del NRF24L01, que gestiona la verificación CRC, las confirmaciones de recepción y las retransmisiones.
+Finalmente, se documentan las verificaciones funcionales realizadas sobre la implementación en Python y el procedimiento de pruebas del sistema completo.
+\end{abstract}
+
+\begin{IEEEkeywords}
+% En orden alfabético
+ADPCM, audio digital, banda ISM, codificación de audio, digitalización, \textit{Enhanced ShockBurst}, fragmentación de paquetes, NRF24L01, Raspberry Pi Zero, transmisión inalámbrica.
+\end{IEEEkeywords}

@@ -1,0 +1,23 @@
+% 10_conclusiones.tex
+
+\section{Conclusiones y recomendaciones}
+
+A partir del desarrollo completo del proyecto se obtienen las siguientes conclusiones:
+
+\begin{enumerate}
+    \item El sistema de transmisión inalámbrica de audio presenta desafíos tecnológicos interdependientes, donde la fragmentación del audio en paquetes de tamaño restringido, la sincronización autónoma del receptor y el manejo del ruido en la banda de \SI{2.4}{\giga\hertz} constituyen los problemas centrales de diseño, cuya solución debe satisfacer simultáneamente la latencia máxima de $60$ segundos, la confiabilidad del enlace y la autonomía energética.
+
+    \item La elección de los parámetros de digitalización determina la viabilidad de la transmisión.
+    La configuración base de audio mono a \SI{8}{\kilo\hertz} con $8$ bits por muestra produce una tasa de \SI{64}{kbps} y mensajes de hasta \SI{120}{kB}; la incorporación de compresión ADPCM reduce la tasa a cerca de \SI{32}{kbps} y aproximadamente a la mitad el número de paquetes, lo que disminuye el tiempo de transmisión y el riesgo de pérdida.
+
+    \item El uso del mecanismo \textit{Enhanced ShockBurst} del NRF24L01, junto con un protocolo de aplicación propio de tres mensajes (\texttt{START}, \texttt{DATA} y \texttt{END}), permite organizar la transferencia de audio sobre un enlace de radiofrecuencia de bajo nivel, mediante la delegación en el módulo la verificación CRC, las confirmaciones y las retransmisiones, sin requerir tecnologías inalámbricas de alto nivel.
+
+    \item La separación del código en un módulo independiente del hardware (\texttt{common.py}) permitió verificar el protocolo de aplicación, la conversión de resolución y la reconstrucción WAV sin disponer de los dispositivos físicos, lo que facilitó la depuración y aumentó la confiabilidad de la implementación antes de las pruebas en hardware.
+\end{enumerate}
+
+Como líneas de mejora sobre la solución desarrollada, se recomienda:
+
+\begin{itemize}
+    \item Implementar un códec $\mu$-law de $8$ bits, que con el mismo \textit{bitrate} del PCM lineal ofrece una calidad de voz superior, aprovechando el campo \texttt{codec} ya previsto en el protocolo.
+    \item Incorporar un mecanismo ARQ a nivel de aplicación, en el que el receptor, al recibir el \texttt{END}, solicite la retransmisión de los bloques faltantes antes de dar la transmisión por completa, en lugar de rellenar con silencio.
+\end{itemize}

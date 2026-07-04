@@ -1,0 +1,146 @@
+% 8_codigo.tex
+
+\section{Código fuente e implementación}
+
+La implementación completa de la solución se encuentra disponible en el repositorio público del proyecto:
+\begin{center}
+\href{https://github.com/dan1elsaenz/ie0527-proyecto}{\texttt{github.com/dan1elsaenz/ie0527-proyecto}}
+\end{center}
+
+El código está escrito en Python y se ejecuta sobre el sistema operativo Linux de la Raspberry Pi Zero de cada nodo.
+La organización del código fuente, ubicado en el directorio \texttt{src/}, se resume en la Tabla \ref{tab:codigo}.
+El módulo \texttt{common.py} (protocolo de aplicación, conversión de audio y reconstrucción WAV) es independiente del hardware, lo que permite verificar su funcionamiento sin tener los dispositivos físicos.
+
+\begin{table}[htb]
+    \centering
+    \caption{Estructura del código fuente de la solución.}
+    \label{tab:codigo}
+    \begin{tabular}{@{}lp{6.5cm}@{}}
+        \toprule
+        Archivo & Descripción \\
+        \midrule
+        \texttt{config.py} & Parámetros compartidos (RF, audio, pines GPIO); igual en ambos nodos. \\
+        \texttt{common.py} & Protocolo de aplicación (\texttt{START}/\texttt{DATA}/\texttt{END}), conversión de audio y WAV. \\
+        \texttt{radio.py}  & Configuración del NRF24L01 mediante \texttt{pyRF24}. \\
+        \texttt{leds.py}   & Señalización con los tres LEDs (\texttt{gpiozero}). \\
+        \texttt{tx.py}     & Nodo transmisor. \\
+        \texttt{rx.py}     & Nodo receptor (escucha continua). \\
+        \texttt{setup/}    & Servicios \texttt{systemd}, instalación y configuración de \texttt{config.txt}. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+A continuación se resumen las principales decisiones de diseño tomadas durante la implementación y la forma en que se realizaron.
+
+\subsection{Configuración del enlace de radiofrecuencia}
+
+Los parámetros del enlace se centran en \texttt{config.py} y son iguales en ambos nodos.
+El enlace utiliza una dirección de \textit{pipe} de $5$ bytes (``\texttt{AUDIO}'') y opera en el canal $76$ (\SI{2476}{\mega\hertz}), el cual fue elegido lejos de los canales WiFi $1$, $6$ y $11$ (centrados en \SI{2412}{\mega\hertz}, \SI{2437}{\mega\hertz} y \SI{2462}{\mega\hertz} respectivamente) para reducir las interferencias.
+La tasa de datos se fijó en \SI{1}{Mbps}, que ofrece mayor sensibilidad que \SI{2}{Mbps} y cumple el tiempo de transmisión requerido.
+La potencia de transmisión se programa al nivel máximo (\texttt{max}).
+Se habilitan el CRC de $16$ bits, el \textit{auto-ACK} y el \textit{payload} dinámico, que evita el relleno de bloques parciales.
+
+La confiabilidad a nivel de enlace se implementa en dos capas.
+La primera es el \textit{Enhanced ShockBurst} del NRF24L01, configurado con \texttt{RETRY\_COUNT}$= 15$ reintentos por paquete y \texttt{RETRY\_DELAY}$= 5$ (cada \SI{250}{\micro\second}).
+La segunda es en la capa de aplicación, donde si tras los $15$ reintentos del hardware el envío sigue fallando, la función \texttt{\_send()} en \texttt{tx.py} reintenta el paquete completo hasta \texttt{APP\_RETRIES}$= 5$ veces adicionales.
+
+En general, la configuración del hardware se aplica en \texttt{radio.py} mediante \texttt{pyRF24}.
+
+\subsection{Pipeline de conversión de audio}
+
+La captura se realiza con \texttt{sounddevice} en formato entero de $32$ bits.
+El INMP441 entrega muestras de $24$ bits dentro del \textit{frame} I2S de $32$ bits (los datos ocupan los bits $[31{:}8]$), de modo que el desplazamiento \texttt{s >{}> 16} extrae los $16$ bits más significativos como un entero con signo de $16$ bits.
+A continuación, la ganancia digital \texttt{MIC\_GAIN} escala las muestras y el resultado se recorta a $\pm 32767$ (correspondiente a la potencia de $2$ a la $15$) para evitar desbordamiento aritmético.
+En el modo PCM-8, las muestras resultantes se reescalan al rango sin signo $[0, 255]$ mediante \texttt{(s >{}> 8) + 128}, donde $128$ representa el silencio por ser el punto medio del rango.
+En el modo ADPCM, las muestras \texttt{int16} se entregan directamente al codificador IMA ADPCM para su compresión a $4$ bits por muestra.
+Al finalizar la recepción, el módulo \texttt{wave} de la biblioteca estándar de Python construye el encabezado WAV de $44$ bytes usando los parámetros transportados en el paquete \texttt{START}.
+
+\subsection{Códec IMA ADPCM}
+
+El modo predeterminado emplea el códec IMA ADPCM (\textit{Interactive Multimedia Association Adaptive Differential Pulse-Code Modulation}) \cite{ima_adpcm1992}, implementado en \texttt{common.py} con base en la biblioteca \texttt{pyima} \cite{pyima}.
+El códec representa cada muestra con $4$ bits en lugar de $16$, con lo que se logra una compresión 4:1 respecto al PCM de $16$ bits.
+
+Para explicar brevemente el proceso de compresión, el codificador mantiene dos variables de estado (el predictor y el índice de paso) que el decodificador replica exactamente.
+En cada muestra, el predictor estima la siguiente a partir de la anterior, el error de predicción se cuantifica en un número de $4$ bits usando el paso actual.
+Ambas variables de estado se actualizan con dos tablas estandarizadas:
+\begin{itemize}
+    \item \texttt{\_ADPCM\_INDEX\_TABLE}: $16$ entradas que ajustan \textit{step\_index} según el \textit{nibble} codificado (valores negativos reducen el paso, positivos lo amplían).
+    \item \texttt{\_ADPCM\_STEP\_TABLE}: $88$ niveles de paso de cuantización con escala logarítmica (de $7$ a $32767$), que permiten seguir tanto señales de baja amplitud como transientes de alta energía.
+\end{itemize}
+
+La selección del códec en el receptor es automática, pues el campo \texttt{codec} del paquete \texttt{START} transporta un código numérico ($0\mathrm{x}00=$ PCM, $0\mathrm{x}02=$ ADPCM) que el receptor utiliza para seleccionar la función de decodificación correspondiente en \texttt{decode\_audio()}.
+
+\subsection{Máquinas de estado de los nodos}
+
+Ambos nodos se implementaron como máquinas de estado finitas, según el diseño planteado en las Figuras \ref{fig:fsm_tx} y \ref{fig:fsm_rx}.
+
+El transmisor (\texttt{tx.py}) recorre $8$ estados con las transiciones mostradas en la Tabla \ref{tab:fsm_tx}.
+La grabación sigue un patrón de botón \textit{toggle}, para el cual \texttt{gpiozero} ejecuta un \textit{callback} de interrupción que activa un \texttt{threading.Event}; el estado \texttt{RECORDING} espera ese evento.
+La captura de audio se realiza de forma asíncrona, puesto que \texttt{sounddevice} acumula \textit{frames} en una lista compartida mediante un \textit{callback} de entrada de audio y el estado \texttt{PREPARING} concatena y codifica los \textit{frames} al detenerse la grabación.
+
+\begin{table}[htb]
+    \centering
+    \caption{Transiciones de la máquina de estados del transmisor.}
+    \label{tab:fsm_tx}
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        Estado & Condición de salida & Siguiente estado \\
+        \midrule
+        \texttt{IDLE}           & Pulsación de botón         & \texttt{RECORDING}     \\
+        \texttt{RECORDING}      & Segunda pulsación          & \texttt{PREPARING}     \\
+        \texttt{PREPARING}      & Codificación completada    & \texttt{SENDING\_START} \\
+        \texttt{SENDING\_START} & ACK recibido               & \texttt{SENDING\_DATA} \\
+        \texttt{SENDING\_DATA}  & Todos los bloques enviados & \texttt{SENDING\_END}  \\
+        \texttt{SENDING\_END}   & ACK recibido               & \texttt{SUCCESS}       \\
+        \texttt{SUCCESS}        & Timeout (\SI{3}{\second})  & \texttt{IDLE}          \\
+        \texttt{ERROR}          & Timeout (\SI{3}{\second})  & \texttt{IDLE}          \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+El receptor (\texttt{rx.py}) permanece en escucha continua y recorre $6$ estados según la Tabla \ref{tab:fsm_rx}.
+Cada bloque \texttt{DATA} recibido se almacena en un diccionario indexado por número de secuencia, y al llegar el paquete \texttt{END}, los bloques se ordenan por clave y se concatenan, lo que tolera llegadas fuera de orden.
+Un \textit{timeout} de \SI{5}{\second} en el estado \texttt{RECEIVING} detecta transmisiones interrumpidas.
+
+\begin{table}[htb]
+    \centering
+    \caption{Transiciones de la máquina de estados del receptor.}
+    \label{tab:fsm_rx}
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        Estado & Condición de salida & Siguiente estado \\
+        \midrule
+        \texttt{IDLE}       & Paquete \texttt{START} recibido        & \texttt{RECEIVING}  \\
+        \texttt{RECEIVING}  & Paquete \texttt{END} recibido          & \texttt{VERIFYING}  \\
+        \texttt{RECEIVING}  & Timeout sin paquetes (\SI{5}{\second}) & \texttt{ERROR}      \\
+        \texttt{VERIFYING}  & Pérdida $\leq$ \texttt{MAX\_LOSS\_PCT} & \texttt{PLAYING}    \\
+        \texttt{VERIFYING}  & Pérdida $>$ \texttt{MAX\_LOSS\_PCT}    & \texttt{ERROR}      \\
+        \texttt{PLAYING}    & Reproducción completada                & \texttt{SUCCESS}    \\
+        \texttt{SUCCESS}    & Timeout (\SI{3}{\second})              & \texttt{IDLE}       \\
+        \texttt{ERROR}      & Timeout (\SI{3}{\second})              & \texttt{IDLE}       \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+La señalización de estados se realiza con los tres LEDs mediante \texttt{leds.py}, según el comportamiento mostrado en la Tabla \ref{tab:led_states}.
+
+\subsection{Recepción con tolerancia a fallos}
+
+El receptor implementa varios mecanismos para mantener la inteligibilidad del audio ante condiciones adversas del canal.
+
+Los bloques \texttt{DATA} se almacenan en un diccionario \texttt{\{seq: bytes\}}.
+Al recibir \texttt{END}, los bloques presentes se ordenan por número de secuencia y se concatenan; entonces los números de secuencia faltantes se rellenan con silencio antes de la decodificación.
+El relleno es diferente según el códec, en PCM-8, cada byte faltante se sustituye por \texttt{0x80} (nivel medio del rango sin signo); en ADPCM, por \texttt{0x00} (mantiene el predictor en reposo).
+Si el porcentaje de bloques faltantes supera \texttt{MAX\_LOSS\_PCT} (\SI{5}{\percent} de forma predeterminada), el receptor descarta la transmisión y pasa a \texttt{ERROR}.
+
+Antes de retornar a \texttt{IDLE}, se invoca \texttt{flush\_rx()} para vaciar la cola FIFO del NRF24L01 y descartar paquetes perdidos de la transmisión anterior que pudieran contaminar la siguiente recepción.
+
+Al finalizar cada transmisión exitosa, la función \texttt{link\_report()} calcula y muestra la duración total, la tasa efectiva de transferencia y el porcentaje de pérdida de bloques, lo que facilita el diagnóstico y medición del enlace.
+
+\subsection{Despliegue y puesta en marcha}
+
+La configuración del sistema operativo se realiza en \texttt{config.txt}, mediante la habilitación de los buses SPI (\texttt{dtparam=spi=on}) e I2S (\texttt{dtparam=i2s=on}) y cargando el \textit{overlay} de audio correspondiente a cada nodo: \texttt{googlevoicehat-soundcard} para el micrófono INMP441 en el transmisor y \texttt{hifiberry-dac} para el DAC PCM5102 en el receptor.
+Cada nodo se ejecuta como un servicio \textit{systemd} que arranca automáticamente en cada encendido.
+El instalador \texttt{setup/install.sh} (con el rol \texttt{tx} o \texttt{rx}) instala las dependencias y habilita el servicio correspondiente.
+
+Ambos nodos registran un \textit{handler} de \texttt{SIGTERM} y una función de limpieza con \texttt{atexit}, de modo que cuando \textit{systemd} detiene el servicio el radio se apaga correctamente y los LEDs quedan en estado neutro, con esto se evitan estados inconsistentes.

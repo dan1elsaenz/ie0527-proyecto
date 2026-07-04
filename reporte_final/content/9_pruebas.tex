@@ -1,0 +1,101 @@
+% 9_pruebas.tex
+
+\section{Pruebas realizadas y resultados}
+
+La validación del sistema se organizó en dos niveles: primero, verificaciones funcionales del software independientes del hardware; y segundo, un procedimiento de validación por etapas sobre los nodos físicos, previo a la prueba integral del enlace.
+Esta separación permite aislar los errores de lógica de los relacionados con el cableado, los buses o el canal inalámbrico.
+
+Cabe aclarar que, durante la implementación, la salida de audio del nodo receptor se realizó con un DAC I2S PCM5102 (\textit{overlay} \texttt{hifiberry-dac}), en lugar del módulo NS4168 planteado en el avance de diseño; el resto de la arquitectura se mantuvo conforme a la propuesta.
+
+\subsection{Verificaciones funcionales sin hardware}
+
+Los módulos \texttt{config.py} y \texttt{common.py} no dependen del hardware, por lo que su comportamiento se verificó directamente en la computadora.
+Se comprobaron los siguientes aspectos del procesamiento de audio y del protocolo de aplicación:
+
+\begin{itemize}
+    \item Empaquetado y reensamblado: la fragmentación de los datos en paquetes y su posterior concatenación reproduce exactamente la secuencia PCM original y los parámetros enviados en el mensaje \texttt{START} se recuperan correctamente al desempaquetarlo.
+    \item Conversión de resolución: la conversión de las muestras de $24$ bits entregadas por el micrófono a $8$ bits por muestra opera según lo previsto.
+    \item Reconstrucción WAV: a partir de los bytes PCM recibidos se reconstruye un archivo WAV reproducible mediante el encabezado de $44$ bytes generado con los parámetros conocidos del sistema.
+    \item Compresión ADPCM: el códec IMA ADPCM de $4$ bits por muestra ($\sim$\SI{32}{kbps}) reduce aproximadamente a la mitad el número de paquetes respecto al PCM de $8$ bits y el receptor lo detecta automáticamente mediante el campo \texttt{codec} del \texttt{START}.
+    \item Tolerancia a pérdida de paquetes: el receptor reproduce el audio incluso cuando faltan algunos bloques, rellenando los huecos con silencio y solo señala error si la pérdida supera el umbral configurado (\texttt{MAX\_LOSS\_PCT}).
+\end{itemize}
+
+\subsection{Procedimiento de validación por etapas en hardware}
+
+Una vez instalado el software en cada nodo, se siguió un procedimiento de validación incremental antes de probar el enlace completo:
+
+\begin{enumerate}
+    \item Verificación del sistema: se confirma la habilitación del bus SPI, la presencia de la tarjeta de audio I2S (\texttt{arecord -l} en el transmisor, \texttt{aplay -l} en el receptor) y la disponibilidad de las bibliotecas de Python requeridas, después de haber ejecutado el \textit{script} de instalación.
+    \item Prueba del micrófono (en transmisor): con el INMP441 cableado, se graba una muestra de prueba para confirmar el alineamiento de bits y ajustar la ganancia de captura.
+    \item Ejecución manual de los nodos: se ejecutan \texttt{tx.py} y \texttt{rx.py} de forma directa para observar los mensajes de estado y los posibles errores en pantalla antes de delegar la operación al servicio.
+    \item Arranque como servicio: se habilita el servicio \textit{systemd} correspondiente, de modo que cada nodo arranca automáticamente en cada encendido.
+\end{enumerate}
+
+\subsection{Pruebas del sistema completo}
+
+La prueba del sistema completo evalúa la captura, transmisión y reproducción de mensajes de voz de aproximadamente \SI{5}{\second}, \SI{10}{\second}  y \SI{15}{\second}, con el códec IMA ADPCM habilitado (que es la opción predeterminada del sistema).
+Las tres primeras transmisiones se realizaron a \SI{30}{\meter} con línea de vista, en el pasillo de la Escuela de Ingeniería Eléctrica, donde se contaron 36 pasos y la cuarta a \SI{100}{\meter}, también con línea de vista.
+Los parámetros para determinar cada prueba como exitosa, son la correcta reconstrucción del archivo WAV, de forma que se escuche de forma inteligible y que la cantidad de bloques perdidos no supere la tolerancia programada.
+
+La Tabla \ref{tab:tx_resultados} resume los indicadores registrados en el nodo transmisor y la Tabla \ref{tab:rx_resultados} los registrados en el nodo receptor.
+
+\begin{table}[htb]
+    \centering
+    \caption{Indicadores del nodo transmisor (IMA ADPCM).}
+    \label{tab:tx_resultados}
+    \begin{tabular}{@{}ccccc@{}}
+        \toprule
+        Prueba & Distancia & Audio capturado & Paquetes & Resultado \\
+        \midrule
+        1 & \SI{30}{\meter}  & \SI{20224}{\byte} & 698  & Exitosa \\
+        2 & \SI{30}{\meter}  & \SI{41920}{\byte} & 1446 & Exitosa \\
+        3 & \SI{30}{\meter}  & \SI{61856}{\byte} & 2133 & Exitosa \\
+        4 & \SI{100}{\meter} & \SI{63648}{\byte} & 2195 & Exitosa \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[htb]
+    \centering
+    \caption{Indicadores del nodo receptor (IMA ADPCM).}
+    \label{tab:rx_resultados}
+    \begin{tabular}{@{}cccc@{}}
+        \toprule
+        Prueba & Tiempo TX & Tasa efectiva & Calidad del enlace \\
+        \midrule
+        1 & \SI{0.79}{\second} & \SI{206.0}{\kilo\bit\per\second} & 698/698 bloques (0\,\%) \\
+        2 & \SI{1.70}{\second} & \SI{197.2}{\kilo\bit\per\second} & 1446/1446 bloques (0\,\%) \\
+        3 & \SI{2.35}{\second} & \SI{210.1}{\kilo\bit\per\second} & 2133/2133 bloques (0\,\%) \\
+        4 & \SI{4.28}{\second} & \SI{119.0}{\kilo\bit\per\second} & 2195/2195 bloques (0\,\%) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Las tres pruebas para determinar el desempeño mínimo completaron la transferencia y reproducción de audio de forma inteligible con éxito, manteniendo tiempos de transmisión y cantidad de paquetes acordes a la duración de audio capturado en cada prueba.
+La tasa efectiva entre \SI{197}{\kilo\bit\per\second} y \SI{210}{\kilo\bit\per\second} se mantuvo por debajo del límite programado de \SI{1}{\mega\bit\per\second} del NRF24L01.
+Esta diferencia se debe al ciclo de solicitud-confirmación del \textit{Enhanced ShockBurst}, donde el transmisor debe esperar el \texttt{ACK} de cada bloque antes de enviar el siguiente y la latencia de procesamiento del intérprete de Python entre paquetes impide saturar el canal físico.
+En cualquier caso, la tasa efectiva resultó entre $6\times$ y $4\times$ superior a la tasa de audio ADPCM (\SI{32}{kbps}), lo que garantiza que la transferencia se complete en una fracción del tiempo de grabación.
+
+Es importante destacar que el tiempo de transmisión contemplado corresponde al intervalo transcurrido entre la recepción del paquete \texttt{START} y la recepción del paquete \texttt{END} por parte del receptor.
+Esto se debe a la condición que debe cumplir el receptor, el cual debe estar en modo de espera y no detecta cuando el transmisor empieza la transmisión, sino hasta que recibe el paquete \texttt{START}.
+
+En este contexto, se obtuvieron tiempos de transmisión cortos para los 3 casos, lo cual fue fundamental para cumplir el requisito de no superar los \SI{150}{\second} entre el inicio de la captura y el final de la reproducción de los $3$ audios en conjunto.
+Por otra parte, para estas pruebas no se violó el factor de tolerancia del $5\%$ preestablecido en el código fuente, de forma que no se alcanzó este factor de seguridad, lo cual se refleja en la pérdida nula de bloques.
+
+Para cumplir con los requisitos del desempeño óptimo, se realizó la prueba de los \SI{100}{\meter} con línea de vista, capturando un audio de \SI{15}{\second}, la cual corresponde a la cuarta prueba.
+Para ello, se colocó el nodo transmisor en la Facultad de Ciencias Sociales y el nodo receptor se colocó en el Aula Magna.
+
+Los resultados obtenidos demuestran que, a pesar de la gran diferencia de distancia respecto a las pruebas anteriores, la calidad del enlace fue óptima al no haber pérdida de paquetes, gracias a los mecanismos de reenvío de paquetes tanto a nivel del ESB como a nivel de aplicación. 
+La prueba a \SI{100}{\meter} confirmó que el enlace mantiene una cobertura y calidad idénticas a las obtenidas a \SI{30}{\meter} bajo condiciones de línea de vista, con la diferencia que el tiempo de transmisión aumentó considerablemente.
+
+En el siguiente \href{https://youtu.be/31yQ3FNfaJI?si=LQ8k5ROzQWWf9_tA}{video demostrativo} se presenta el funcionamiento en tiempo real del sistema completo durante una transmisión real para evidenciar los mecanismos de detección de errores.
+En la parte izquierda del monitor se observa el nodo transmisor, mientras que en la parte derecha se aprecia el nodo receptor.
+Durante la ejecución, el transmisor captura el mensaje de audio, aplica el proceso de compresión IMA ADPCM y fragmenta la información antes de iniciar la transmisión mediante el enlace de radiofrecuencia.
+Para esta prueba, el archivo de audio original corresponde a $65856$ B, los cuales, después del proceso de compresión, se transmiten en un total de $2244$ paquetes.
+
+De forma simultánea, el nodo receptor registra la cantidad de paquetes recibidos, realiza el proceso de descompresión y reconstruye el archivo de audio correspondiente.
+Los indicadores mostrados durante la ejecución evidencian que la cantidad de paquetes transmitidos coincide con la cantidad de paquetes recibidos por el receptor.
+Asimismo, una vez finalizado el proceso de descompresión, el tamaño del archivo reconstruido corresponde nuevamente a $65856$ B, lo que confirma que la información original fue recuperada y que no se presentaron pérdidas de paquetes durante la transmisión. 
+Sin embargo, como se observa en el video, el tiempo de transmisión aumentó de \SI{2.48}{\second} en condiciones de separación cercanas y aumentó a \SI{9.50}{\second} para la prueba con una distancia mayor y obstrucciones.
+
+El resto de demostraciones fueron realizadas durante la prueba presencial del proyecto con supervisión del profesor.

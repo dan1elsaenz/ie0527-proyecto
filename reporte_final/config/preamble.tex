@@ -1,0 +1,155 @@
+% PAQUETES DEL PROYECTO
+
+% Configuración de codificación y lenguaje
+\usepackage[utf8]{inputenc} % Caracteres UTF-8
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel} % Idioma español
+
+% Letra
+\usepackage{libertinus}
+\usepackage{libertinust1math}
+
+\usepackage{FiraMono}
+\renewcommand{\ttdefault}{fvm}
+\DeclareTextFontCommand{\texttt}{\footnotesize\ttfamily}
+
+% Referencias bibliográficas
+\usepackage[backend=biber, style=ieee, language=spanish]{biblatex}
+\addbibresource{references.bib}
+\usepackage{csquotes} % Comillas españolas en las citas
+
+% Formato de documentos y márgenes
+\usepackage[left=18mm,right=18mm,top=21mm,bottom=21mm]{geometry}
+\usepackage{fancyhdr} % Encabezados y pies de página
+\flushbottom % Todas las páginas tengan la misma altura
+\usepackage{lastpage} % Última página
+
+%Manejo de fechas
+\usepackage[es]{datetime2}
+
+% Leyendas de imágenes/tablas
+\usepackage{caption}
+\DeclareCaptionLabelSeparator{midsep}{\hspace{0.5em}}
+\captionsetup[figure]{
+  labelfont=bf,
+  labelsep=midsep
+}
+\captionsetup[table]{
+  labelfont=bf,
+  labelsep=midsep
+}
+\usepackage{subcaption}
+\captionsetup[table]{name=Tabla}
+
+% Figuras
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Ubicación de elementos flotantes como figuras y tablas
+\usepackage{float}
+\renewcommand{\topfraction}{0.9} % Máx. parte superior ocupada por floats
+\renewcommand{\bottomfraction}{0.8} % Máx. parte inferior
+\renewcommand{\textfraction}{0.1} % Mínimo texto que debe quedar
+\renewcommand{\floatpagefraction}{0.8} % Requerido para página solo con floats
+
+% Paquetes de matemática
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{bm} % bold math
+\usepackage{mathtools}
+\usepackage{nicefrac}
+\usepackage{commath}
+\decimalpoint % Usa punto decimal en lugar de coma.
+
+% Circuitos
+\usepackage[american, siunitx]{circuitikz}
+
+% Unidades del SI
+\usepackage{siunitx}
+
+% Paquete para insertar imágenes y gráficos
+\usepackage{import, graphicx}
+
+% Tablas
+\usepackage{tabularray}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+
+% Tikz
+\usepackage{graphics,tikz}
+\usetikzlibrary{babel}
+
+% Listas numeradas y viñetas
+\usepackage{enumitem}
+\setlist[itemize]{label=\textbullet}
+
+% Letra de títulos
+\usepackage{titlesec}
+
+% Section con tamaño de 15pt
+\titleformat{\section}
+  {\normalfont\fontsize{15}{16}\selectfont\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+% Subsection con tamaño de 12pt
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\selectfont\bfseries}
+  {\thesubsection}
+  {1em}
+  {}
+
+% Subsubsection con tamaño de 10pt
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{10}{12}\selectfont\bfseries}
+  {\thesubsubsection}
+  {1em}
+  {}
+
+% Paragraph
+\titleformat{\paragraph}
+  {\normalfont\fontsize{10}{12}\selectfont\bfseries}
+  {\theparagraph}
+  {0.5em}
+  {}
+
+% Entorno inciso
+\usepackage[most]{tcolorbox}
+% Contador
+\newcounter{inciso}[subsection]
+\renewcommand{\theinciso}{\alph{inciso}}
+% Estilo del inciso
+\newtcolorbox{incisobox}{
+  enhanced,
+  sharp corners,
+  colback=white,
+  colframe=black,
+  boxrule=0pt,
+  frame hidden,
+  borderline west={2pt}{0pt}{black},
+  left=10pt,
+  right=0pt,
+  top=4pt,
+  bottom=4pt,
+}
+% Comando
+\newcommand{\inciso}[1]{%
+  \refstepcounter{inciso}%
+  \addcontentsline{toc}{subsubsection}{Inciso \theinciso}
+  \begin{incisobox}
+    \textbf{\theinciso)} #1
+  \end{incisobox}
+}
+
+% Manejo de enlaces
+\usepackage[colorlinks=true, linkcolor=black, citecolor=blue, urlcolor=blue]{hyperref}
+
+% Compatibilidad con entorno IEEEkeywords (venía del formato IEEEtran)
+\newenvironment{IEEEkeywords}{\par\smallskip\noindent\textbf{Palabras clave:} \small}{\par}
+\renewcommand{\UrlFont}{\footnotesize\ttfamily}
+% - Activa los enlaces en el documento
+% - linkcolor=black (enlaces internos en negro)
+% - citecolor=blue (citas en azul)
+% - urlcolor=blue (url en azul)

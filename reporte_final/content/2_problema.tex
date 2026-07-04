@@ -1,0 +1,47 @@
+% 2_problema.tex
+
+% Realice un análisis de la situación descrita y los desafíos tecnológicos que deben resolver para poder cumplir con el objetivo. Utilicen lenguaje técnico y preciso.
+
+\section{Análisis del problema}
+
+El objetivo del proyecto consiste en desarrollar un sistema capaz de capturar, transmitir y reproducir información de audio de forma inalámbrica.
+En esta sección, se analizan los principales desafíos que surgen a partir de los requerimientos solicitados en el enunciado.
+
+Uno de los principales desafíos corresponde a la cadena completa de procesamiento de la señal.
+Inicialmente, el transmisor debe convertir una señal de voz capturada mediante un micrófono en información digital para su posterior almacenamiento y transmisión.
+El receptor debe reconstruir dicha información y reproducir el mensaje de audio.
+Por esta razón, es necesario diseñar adecuadamente las etapas de captura, digitalización, almacenamiento, transmisión, recepción y reproducción, con el fin de minimizar las pérdidas de información y mantener una calidad de audio adecuada.
+Dado que los módulos de radiofrecuencia de bajo nivel imponen un tamaño máximo de paquete del orden de decenas de bytes, el audio digitalizado debe fragmentarse en múltiples paquetes numerados, lo que exige diseñar un protocolo propio de segmentación y reensamblado en el receptor.
+
+Otra limitación importante corresponde al método de comunicación utilizado.
+Debido a que no se permite el uso de tecnologías inalámbricas de alto nivel como WiFi, Bluetooth o Zigbee, no se dispone de protocolos de comunicación previamente implementados.
+En consecuencia, es necesario desarrollar un mecanismo propio de comunicación digital mediante módulos de radiofrecuencia de bajo nivel, lo que implica definir procedimientos de sincronización, transmisión y recepción de datos.
+
+Adicionalmente, el receptor debe permanecer en estado de espera de forma permanente y detectar autónomamente el inicio de una transmisión válida.
+Esto representa un reto de sincronización, debido a que el receptor debe diferenciar un paquete de inicio de transmisión de posibles señales del ambiente o ruido presente en el canal, sin conocer previamente el instante de llegada de la información.
+
+También se presenta una restricción asociada al uso de un único microprocesador por dispositivo, pues todas las tareas relacionadas con captura de audio, almacenamiento, procesamiento digital, control del enlace inalámbrico y reproducción deben ejecutarse mediante una sola unidad de procesamiento.
+Esto obliga a optimizar el uso de los recursos computacionales disponibles.
+
+Otro aspecto relevante corresponde al almacenamiento de la información digitalizada.
+El sistema debe ser capaz de almacenar temporalmente mensajes de voz de hasta $15$ segundos de duración antes de su transmisión.
+La cantidad de memoria requerida depende directamente de parámetros como la frecuencia de muestreo, el número de bits por muestra y el posible uso de técnicas de compresión.
+Por tanto, es necesario estimar la capacidad de almacenamiento requerida para garantizar que todos los mensajes puedan ser procesados sin inconvenientes.
+
+De forma complementaria, la cantidad de información generada durante la digitalización afecta directamente el tiempo necesario para completar la transmisión.
+Por esta razón, resulta conveniente analizar la implementación de mecanismos de compresión de audio que permitan reducir el tamaño de los datos transmitidos.
+La aplicación de técnicas de compresión puede disminuir el tiempo de transmisión y los requerimientos de almacenamiento, aunque introduce el desafío adicional de mantener una calidad de audio suficiente para garantizar la inteligibilidad del mensaje recibido.
+
+Con respecto al desempeño del sistema, este debe cumplir simultáneamente requisitos de tiempo de respuesta y confiabilidad.
+El proceso completo de captura, procesamiento, transmisión y reproducción debe finalizar dentro de los límites temporales establecidos en los requerimientos del proyecto.
+Además, se debe garantizar que el mensaje reproducido represente adecuadamente la información capturada por el micrófono.
+
+La transmisión inalámbrica está expuesta a fenómenos de ruido, interferencia y pérdida de paquetes en el canal, lo que puede afectar la calidad del audio reconstruido.
+También, la variación temporal en la llegada de paquetes (\textit{jitter}) puede producir discontinuidades en la reproducción del audio si las muestras no se entregan a la tasa correcta, por lo que se requiere un mecanismo de almacenamiento temporal en el receptor que absorba estas variaciones.
+Por estas razones, resulta necesario considerar mecanismos que permitan verificar la integridad de la información recibida y aumentar la confiabilidad del sistema.
+
+Otro aspecto a considerar es la autonomía energética.
+Ambos dispositivos deben operar mediante baterías y mantener un consumo reducido durante su funcionamiento.
+Esto obliga a considerar el consumo asociado a los módulos de procesamiento, almacenamiento, captura de audio, transmisión por radiofrecuencia y reproducción, con el fin de garantizar una autonomía adecuada para la operación del sistema.
+
+En resumen, a partir del análisis realizado, el principal desafío consiste en satisfacer simultáneamente los requisitos de calidad de audio, latencia máxima de $60$ segundos por mensaje y confiabilidad del enlace, bajo las restricciones de ancho de banda del canal, tamaño de paquete del módulo RF y autonomía energética de los dispositivos.

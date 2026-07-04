@@ -1,0 +1,24 @@
+% CONFIGURACIÓN DE LA PÁGINA
+
+% Estilo de página
+\pagestyle{fancy}
+
+\makeatletter
+% Información en los márgenes de las páginas
+\rhead{\@title}
+\lhead{\@courseinitials: \@coursename}
+\lfoot{\@faculty}
+\rfoot{\@university}
+\makeatother
+
+\cfoot{\thepage\ de \pageref{LastPage}}
+
+\setlength{\headheight}{15pt}
+
+\let\OLDthebibliography=\thebibliography
+\def\thebibliography#1{\OLDthebibliography{#1}%
+\addcontentsline{toc}{section}{\refname}}
+
+\makeatletter
+\renewcommand\@biblabel[1]{#1. \ }
+\makeatother
