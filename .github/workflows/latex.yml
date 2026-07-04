@@ -1,0 +1,86 @@
+name: Compile LaTeX and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.tex"
+      - "**/*.bib"
+      - "**/*.cls"
+      - "**/images/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.find.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: find
+        run: |
+          dirs=$(find . -name "main.tex" | sed 's|/main.tex$||' | sed 's|^\./||' \
+            | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "dirs=$dirs" >> $GITHUB_OUTPUT
+
+  build:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.discover.outputs.dirs) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile ${{ matrix.dir }}/main.tex
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: ${{ matrix.dir }}
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-${{ matrix.dir }}
+          path: ${{ matrix.dir }}/main.pdf
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download all PDF artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pdf-*
+          path: _artifacts
+
+      - name: Assemble _site
+        run: |
+          mkdir -p _site
+          for artifact_dir in _artifacts/pdf-*/; do
+            dir_name="${artifact_dir#_artifacts/pdf-}"
+            dir_name="${dir_name%/}"
+            mkdir -p "_site/$dir_name"
+            cp "$artifact_dir/main.pdf" "_site/$dir_name/main.pdf"
+          done
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
