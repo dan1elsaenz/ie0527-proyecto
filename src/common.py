@@ -142,7 +142,7 @@ def u8_to_pcm16(pcm_bytes):
 # Compresión IMA ADPCM
 # ———————————————————————————————————————————————————————————————————————————
 
-# Tablas estándar IMA/DVI ADPCM
+# Tablas estándar IMA ADPCM
 _ADPCM_INDEX_TABLE = (-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8)
 _ADPCM_STEP_TABLE = (
     7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41,
@@ -246,7 +246,7 @@ def ima_adpcm_decode(data):
 
 
 # ———————————————————————————————————————————————————————————————————————————
-# Despacho por códec
+# Por códec
 # ———————————————————————————————————————————————————————————————————————————
 
 def encode_audio(samples24, gain=1.0, codec=CODEC):
@@ -254,7 +254,7 @@ def encode_audio(samples24, gain=1.0, codec=CODEC):
     códec. Devuelve los bytes listos para fragmentar y enviar."""
     if codec == "adpcm":
         return ima_adpcm_encode(pcm24_to_pcm16(samples24, gain))
-    return pcm24_to_u8(samples24, gain)   # pcm default
+    return pcm24_to_u8(samples24, gain) # pcm default
 
 
 def decode_audio(data, codec="pcm"):
@@ -262,7 +262,7 @@ def decode_audio(data, codec="pcm"):
     según el códec indicado en el START."""
     if codec == "adpcm":
         return ima_adpcm_decode(data)
-    return u8_to_pcm16(data)              # pcm default
+    return u8_to_pcm16(data)            # pcm default
 
 
 # ———————————————————————————————————————————————————————————————————————————

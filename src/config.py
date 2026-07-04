@@ -6,15 +6,13 @@ Parámetros compartidos entre el nodo transmisor (tx.py) y el receptor (rx.py).
 # nRF24L01+PA+LNA
 # ———————————————————————————————————————————————————————————————————————————
 
-# Dirección del pipe (misma en tx y rx). 5 bytes.
+# Dirección del pipe.
 RF_ADDRESS = b"AUDIO"
 
-# Canal RF (0-125). Cada canal son 1 MHz a partir de 2400 MHz.
-# Alejado de los canales WiFi 1/6/11.
+# Canal RF (0-125)
 RF_CHANNEL = 76
 
 # Tasa de datos en "250kbps", "1Mbps" o "2Mbps"
-# Se usa 1 Mbps para cumplir el tiempo de transmisión (< 60 s)
 RF_DATA_RATE = "1Mbps"
 
 # Potencia de salida en "min" (-18 dBm), "low" (-12), "high" (-6) o "max" (0 dBm)
@@ -30,8 +28,8 @@ DYNAMIC_PAYLOADS = True
 AUTO_ACK = True
 
 # Reintentos automáticos del ESB por paquete.
-RETRY_COUNT = 15        # ARC 0-15 reintentos
-RETRY_DELAY = 5         # ARD pasos de 250 us (1500 us)
+RETRY_COUNT = 15
+RETRY_DELAY = 5
 
 # Reintentos a nivel de aplicación.
 APP_RETRIES = 5
@@ -40,9 +38,9 @@ APP_RETRIES = 5
 # Parámetros de digitalización de audio
 # ———————————————————————————————————————————————————————————————————————————
 
-SAMPLE_RATE = 8000      # Hz
-BITS = 8                # bits por muestra
-CHANNELS = 1            # mono
+SAMPLE_RATE = 8000  # Hz
+BITS = 8            # bits por muestra
+CHANNELS = 1        # mono
 
 # Códec de la carga de audio:
 #   "pcm"   -> PCM lineal 8 bits (64 kbps)
@@ -50,7 +48,6 @@ CHANNELS = 1            # mono
 CODEC = "adpcm"
 
 # Ganancia digital aplicada al pasar de 24 a 8 bits
-# Hay que ajustar.
 MIC_GAIN = 1.0
 
 # ———————————————————————————————————————————————————————————————————————————

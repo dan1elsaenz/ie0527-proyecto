@@ -84,7 +84,7 @@ class Receiver:
             self.params = common.parse_start(raw)
             self.blocks = {}
             self.last_rx = time.time()
-            # Reiniciar indicadores para esta transmisión.
+            # Reiniciar indicadores para esta transmisión
             self.t_start = self.last_rx
             self.t_end = 0.0
             self.bytes_rx = 0
@@ -120,8 +120,7 @@ class Receiver:
         pct = 100.0 * faltan / total if total else 0.0
         if pct <= config.MAX_LOSS_PCT:
             if faltan:
-                print(f"Faltan {faltan}/{total} bloques ({pct:.1f}%) -> "
-                      f"se rellenan con silencio.")
+                print(f"Faltan {faltan}/{total} bloques ({pct:.1f}%)")
             else:
                 print("Archivo completo.")
             self.state = PLAYING
@@ -136,12 +135,11 @@ class Receiver:
         lo reproduce por el DAC."""
         self.signals.playing()
         total = self.params["total_blocks"]
-        # Byte de silencio según el códec: PCM unsigned -> 128; ADPCM -> 0.
+        # Byte de silencio dependiendo del códec
         fill = (b"\x80" if self.params["codec"] == "pcm" else b"\x00") \
             * config.DATA_BYTES
         encoded = b"".join(self.blocks.get(i, fill) for i in range(total))
-        # Decodificar a int16 según el códec (pcm o adpcm).
-        samples = common.decode_audio(encoded, self.params["codec"])
+        samples = common.decode_audio(encoded, self.params["codec"]) # Decodificar a int16 según el códec
         path = os.path.join(config.AUDIO_TMP_DIR, "recibido.wav")
         common.build_wav(path, samples.tobytes(), fs=self.params["fs"],
                          bits=16, channels=self.params["channels"])
