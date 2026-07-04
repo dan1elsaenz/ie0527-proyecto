@@ -9,6 +9,12 @@ El presente repositorio contiene el proyecto desarrollado para el curso IE0527: 
 > - Andrés Víquez Zamora
 > - Guillermo Escobar Arrieta
 
+Los entregables se pueden acceder a continuación:
+
+- [**Avance 1**](https://dan1elsaenz.github.io/ie0527-proyecto/avance_01/main.pdf)
+- [**Avance 2**](https://dan1elsaenz.github.io/ie0527-proyecto/avance_02/main.pdf)
+- [**Reporte final**](https://dan1elsaenz.github.io/ie0527-proyecto/reporte_final/main.pdf)
+
 ---
 
 ## 1. Enunciado del proyecto
